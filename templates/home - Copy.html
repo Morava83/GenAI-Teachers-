@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GenAI-Teachers</title>
+  <style>
+    /* Simple centered page and styled button */
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #fafafa;
+      flex-direction: column;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    button {
+      font-size: 1.2rem;
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background-color: #e5e5e5;
+    }
+
+    #response {
+      margin-top: 20px;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+  <h1>Press the Button</h1>
+  <button id="pressBtn">Press me</button>
+
+  <p id="response"></p>
+
+  <script>
+    // This script runs when the button is clicked
+    document.getElementById('pressBtn').addEventListener('click', () => {
+      // Send a request to Django endpoint /press/
+      fetch('/press/')
+        .then(response => response.json())
+        .then(data => {
+          console.log(data.message); // shows in browser console
+          document.getElementById('response').textContent = data.message; // show on page
+        })
+        .catch(err => console.error('Error:', err));
+    });
+  </script>
+</body>
+</html>

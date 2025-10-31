@@ -1,11 +1,12 @@
 from django.shortcuts import render
-from django.http import JsonResponse   # ← add this line!
+from django.http import JsonResponse
 
+def index(request):
+    return render(request, "index.html")
 
-# Create your views here.
-def home(request):
-    return render(request, 'home.html')
+def personalization(request):
+    return render(request, "personalization.html")
 
-def press_button(request):
-    print("Button was pressed!")  # this will show in the Django terminal
-    return JsonResponse({'message': 'Button press received!'})
+def press_button(request, num):
+    print(f"Button {num} pressed!")   # ✅ This prints IN TERMINAL
+    return JsonResponse({"pressed": num})
