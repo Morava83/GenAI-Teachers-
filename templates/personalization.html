@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalization - Math Problem Generator</title>
+
+    <!-- ✅ Same static CSS link -->
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <div class="personalization-container">
+        <h1>Personalization</h1>
+        <div class="progress">Question 1 of 3</div>
+        
+        <div class="question" id="question1">
+            <label>What are your hobbies? (3-5)</label>
+            <textarea placeholder="Enter your hobbies, separated by commas"></textarea>
+            <div class="note">Example: reading, swimming, photography</div>
+        </div>
+
+        <div class="question" id="question2" style="display: none;">
+            <label>What topics are you always interested in discussing? (3-5)</label>
+            <textarea placeholder="Enter topics you're interested in, separated by commas"></textarea>
+            <div class="note">Example: technology, art, science</div>
+        </div>
+
+        <div class="question" id="question3" style="display: none;">
+            <label>What types of books and videos do you usually enjoy? (3-5)</label>
+            <textarea placeholder="Enter your preferred content types, separated by commas"></textarea>
+            <div class="note">Example: mystery novels, educational videos, documentaries</div>
+        </div>
+
+        <div class="button-group">
+            <button class="skip-btn" onclick="skipQuestion()">Skip</button>
+            <button class="next-btn" onclick="nextQuestion()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 1;
+        const totalQuestions = 3;
+        const answers = {};
+
+        function updateProgress() {
+            document.querySelector('.progress').textContent = `Question ${currentQuestion} of ${totalQuestions}`;
+        }
+
+        function saveAnswer() {
+            const textarea = document.querySelector(`#question${currentQuestion} textarea`);
+            const answer = textarea.value.trim();
+            answers[`question${currentQuestion}`] = answer;
+            
+            console.log(`Saving answer for question ${currentQuestion}:`, answer);
+            console.log('Current answers object:', answers);
+            
+            // 保存到localStorage
+            try {
+                localStorage.setItem('userPreferences', JSON.stringify(answers));
+                console.log('Successfully saved to localStorage');
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+            }
+        }
+
+        function nextQuestion() {
+            console.log('nextQuestion called, currentQuestion:', currentQuestion);
+            saveAnswer();
+            if (currentQuestion < totalQuestions) {
+                document.querySelector(`#question${currentQuestion}`).style.display = 'none';
+                currentQuestion++;
+                document.querySelector(`#question${currentQuestion}`).style.display = 'block';
+                updateProgress();
+                console.log('Moved to question:', currentQuestion);
+            } else {
+                console.log('All questions completed, showing completion message');
+                showCompletionMessage();
+            }
+        }
+
+        function skipQuestion() {
+            if (currentQuestion < totalQuestions) {
+                document.querySelector(`#question${currentQuestion}`).style.display = 'none';
+                currentQuestion++;
+                document.querySelector(`#question${currentQuestion}`).style.display = 'block';
+                updateProgress();
+            } else {
+                showCompletionMessage();
+            }
+        }
+
+        function showCompletionMessage() {
+            const container = document.querySelector('.personalization-container');
+            container.innerHTML = `
+                <h1>Thank You!</h1>
+                <p style="text-align: center; margin: 20px 0;">
+                    Your preferences have been saved to your device. You can modify them later to enhance your personalized experience.
+                </p>
+                <div class="completion-button-container">
+                    <button class="next-btn completion-button" onclick="goToMain()">
+                        Continue to Math Problem Generator
+                    </button>
+                </div>
+            `;
+        }
+
+        function goToMain() {
+            try {
+                console.log('Attempting to navigate to /main...');
+                // 尝试多种跳转方式
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    // 本地开发环境
+                    window.location.href = '/main';
+                } else {
+                    // 生产环境
+                    window.location.href = '/main';
+                }
+            } catch (error) {
+                console.error('Navigation error:', error);
+                // 备用方案：直接跳转
+                window.location.replace('/main');
+            }
+        }
+
+        // 页面加载时检查是否有已保存的答案
+        window.onload = function() {
+            const savedAnswers = localStorage.getItem('userPreferences');
+            if (savedAnswers) {
+                const parsedAnswers = JSON.parse(savedAnswers);
+                // 恢复已保存的答案
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const questionId = `question${i}`;
+                    if (parsedAnswers[questionId]) {
+                        const textarea = document.querySelector(`#${questionId} textarea`);
+                        if (textarea) {
+                            textarea.value = parsedAnswers[questionId];
+                        }
+                    }
+                }
+            }
+        };
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html> 
