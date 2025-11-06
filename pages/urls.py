@@ -1,8 +1,8 @@
-from django.urls import path
+from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("personalization/", views.personalization, name="personalization"),
-    path("press/<int:num>/", views.press_button, name="press_button"),
+    path("api/generate", views.generate_problem, name="generate_problem"),
+    path("api/health", views.health_check, name="health_check"),
+    re_path(r'^.*$', views.react_app, name="react_app"),
 ]
