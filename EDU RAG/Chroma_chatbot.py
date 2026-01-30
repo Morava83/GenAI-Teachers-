@@ -9,7 +9,7 @@ from langchain.prompts import (
 from langchain.chains import LLMChain
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.vectorstores import Chroma
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.schema.runnable import RunnablePassthrough
 from gpt_module import get_gpt_response, generate_prompt
 from Chroma_retriever import create_retriever, load_data
@@ -31,7 +31,7 @@ REVIEWS_CHROMA_PATH = "chroma_data/"
 
 reviews_vector_db = Chroma(
     persist_directory=REVIEWS_CHROMA_PATH,
-    embedding_function=OpenAIEmbeddings()
+    embedding_function=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 )
 
 docs = load_data("EDU RAG/examples/Math 140 Tutorial 3 Solutions.pdf")

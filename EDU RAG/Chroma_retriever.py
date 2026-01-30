@@ -4,7 +4,7 @@ from langchain_community.document_loaders import PyPDFium2Loader
 import os
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 dotenv.load_dotenv()
 REVIEWS_CHROMA_PATH = "chroma_data"
@@ -15,16 +15,16 @@ def load_data(path):
     return docs
 
 def create_retriever(docs):
-    embeddings = OpenAIEmbeddings()
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     retriever = Chroma(persist_directory=REVIEWS_CHROMA_PATH).from_documents(
         docs,
-        OpenAIEmbeddings(),
+        HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"),
     )
     return retriever
 
 def get_retriever(collection_name="edu-research", persist_directory="chroma_data_edu_research"):
     """Get retriever from existing Chroma database."""
-    embedder = OpenAIEmbeddings()
+    embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
     vectorstore = Chroma(
         collection_name=collection_name,

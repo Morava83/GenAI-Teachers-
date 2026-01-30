@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_openai import ChatOpenAI
 from gpt_module import get_gpt_response, generate_prompt
@@ -24,7 +24,7 @@ class QueryHandler:
         self.persist_directory = persist_directory
 
         # Initialize embedder and vectorstore
-        embedder = OpenAIEmbeddings()
+        embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         self.vectorstore = Chroma(
             collection_name=collection_name,
             embedding_function=embedder,

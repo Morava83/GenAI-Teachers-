@@ -28,7 +28,7 @@ def find_route(question):
     system = """You are a router. Given a user question, return the most relevant data source to answer the question. 
     We have two data sources:
     1. problem_vectorstore: This contains examples of problem sets. Choose this data source if the query is asking to generate a question or problem. 
-       Example: "create a math problem involving algebra?"
+       Example: "Create a math problem involving algebra."
     2. tutorial_vectorstore: This contains definitions and knowledge sets of problems. Choose this data source if the query is related to understanding definitions or concepts. 
        Example: "What is the definition of an algebraic expression?"
     3. prompting the answer directly: If you are unsure, ask the user to rewrite the question and say please refer math-related question.

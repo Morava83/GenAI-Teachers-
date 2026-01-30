@@ -1,6 +1,6 @@
 import openai
 import langchain
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
-embed_model = "text-embedding-ada-002"
+embed_model = "all-MiniLM-L6-v2"
 
 def vectorstore(path):
     loader = PyPDFLoader(path)
@@ -30,7 +30,7 @@ def vectorstore(path):
         f"Creating collection: {collection_name} in local directory {persist_directory}"
     )
 
-    embedder = OpenAIEmbeddings()
+    embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
     vectorstore = Chroma.from_documents(
         documents=pdf_texts,

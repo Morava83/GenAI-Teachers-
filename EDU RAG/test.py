@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 load_dotenv()
 
@@ -9,7 +9,7 @@ persist_directory = "chroma_data_edu_research"
 
 import time
 
-embedder = OpenAIEmbeddings()
+embedder = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 # Create or load Chroma vectorstore
 vectorstore = Chroma(
