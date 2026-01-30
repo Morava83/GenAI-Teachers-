@@ -1,49 +1,32 @@
 import os
 from dotenv import load_dotenv
 from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
 load_dotenv()
-from pinecone import Pinecone
-api_key = os.environ.get("PINECONE_API_KEY")
 
-print(f"Using API key: {api_key}")
-# configure client
-pc = Pinecone(api_key=api_key)
-
-from pinecone import ServerlessSpec
-
-cloud = os.environ.get('PINECONE_CLOUD') or 'aws'
-region = os.environ.get('PINECONE_REGION') or 'us-east-1'
-
-spec = ServerlessSpec(cloud=cloud, region=region)
-
-index_name = "edu-research"
+collection_name = "edu-research"
+persist_directory = "chroma_data_edu_research"
 
 import time
 
-existing_indexes = [
-    index_info["name"] for index_info in pc.list_indexes()
-]
 embedder = OpenAIEmbeddings()
-# check if index already exists (it shouldn't if this is first time)
-if index_name not in existing_indexes:
-    # if does not exist, create index
-    pc.create_index(
-        index_name,
-        dimension=384,  # dimensionality of minilm
-        metric='dotproduct',
-        spec=spec
-    )
-    # wait for index to be initialized
-    while not pc.describe_index(index_name).status['ready']:
-        time.sleep(1)
 
-# connect to index
-index = pc.Index(index_name)
-time.sleep(1)
-# view index stats
-print(index.describe_index_stats())
+# Create or load Chroma vectorstore
+vectorstore = Chroma(
+    collection_name=collection_name,
+    embedding_function=embedder,
+    persist_directory=persist_directory
+)
+
+# view collection stats
+print(f"Collection name: {collection_name}")
+print(f"Number of documents: {vectorstore._collection.count()}")
 
 query = " Intermediate Value Theorem?"
-xq = embedder.embed_query(query)
-xc = index.query(vector=xq, top_k=3, include_metadata=True)
-print(xc)
+results = vectorstore.similarity_search_with_score(query, k=3)
+print("\nQuery results:")
+for doc, score in results:
+    print(f"Score: {score}")
+    print(f"Content: {doc.page_content[:200]}...")
+    print(f"Metadata: {doc.metadata}")
+    print("---")

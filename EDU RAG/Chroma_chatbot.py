@@ -22,7 +22,6 @@ from langchain.agents import (
     AgentExecutor,
 )
 from langchain import hub
-from pinecone import Pinecone
 
 client = OpenAI(
   api_key=os.environ['OPENAI_API_KEY']

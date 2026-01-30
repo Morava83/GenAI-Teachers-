@@ -7,6 +7,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
 from dotenv import load_dotenv
 
+
 # Set up Chroma
 
 # Load environment variables from .env file
@@ -23,8 +24,8 @@ def vectorstore(path):
     )
     pdf_texts = text_splitter.split_documents(pages)
 
-    collection_name = "edu-rag-tutorial"
-    persist_directory = "chroma_data_tutorial"
+    collection_name = "edu-research"
+    persist_directory = "chroma_data_edu_research"
 
     print(
         f"Creating collection: {collection_name} in local directory {persist_directory}"
@@ -41,3 +42,5 @@ def vectorstore(path):
 
     return vectorstore
 
+if __name__ == "__main__":
+    vectorstore_instance = vectorstore("EDU RAG/examples/Math 140 Tutorial 3 Solutions.pdf")

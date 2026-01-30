@@ -22,6 +22,20 @@ def create_retriever(docs):
     )
     return retriever
 
+def get_retriever(collection_name="edu-research", persist_directory="chroma_data_edu_research"):
+    """Get retriever from existing Chroma database."""
+    embedder = OpenAIEmbeddings()
+
+    vectorstore = Chroma(
+        collection_name=collection_name,
+        embedding_function=embedder,
+        persist_directory=persist_directory
+    )
+
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+
+    return retriever
+
 def test_retrieval(retriever):
     test_query = "give me the solution for limx→πsin(x+ sinx)"
     results = retriever.similarity_search(test_query, k=3)

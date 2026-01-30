@@ -7,8 +7,8 @@ import os
 from langchain.schema import Document
 from dotenv import load_dotenv
 load_dotenv()
-from Problem_chatchain import query_pinecone_problem
-from Tutorial_chatchain import query_pinecone_tutorial
+from Problem_chatchain import query_chroma_problem
+from Tutorial_chatchain import query_chroma_tutorial
 
 api_key=os.environ.get("OPENAI_API_KEY")
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
@@ -45,13 +45,13 @@ def find_route(question):
     response = route_chain.invoke({"question": question})
     return response
 
-def query_pinecone(question, dok_level,route):
+def query_chroma(question, dok_level,route):
     route = find_route(question).content.strip()
     print(route)
     if route == "Data source: problem_vectorstore":
-        response = query_pinecone_problem(question, dok_level)
+        response = query_chroma_problem(question, dok_level)
     elif route == "Data source: tutorial_vectorstore":
-        response = query_pinecone_tutorial(question, dok_level)
+        response = query_chroma_tutorial(question, dok_level)
     else:
         response = route
     return response
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     question = input("Enter your query: ")
     dok_level = int(input("Enter the Depth of Knowledge (DOK) level (1-4): "))
     route = find_route(question)
-    response = query_pinecone(question, dok_level,route)
+    response = query_chroma(question, dok_level,route)
     print(response)
 
 
