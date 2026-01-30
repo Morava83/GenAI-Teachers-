@@ -12,7 +12,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain.schema.runnable import RunnablePassthrough
 from gpt_module import get_gpt_response, generate_prompt
-from create_retriever import create_retriever, load_data
+from Chroma_retriever import create_retriever, load_data
 from openai import OpenAI
 import os
 dotenv.load_dotenv()
