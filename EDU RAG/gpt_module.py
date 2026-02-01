@@ -64,7 +64,7 @@ def generate_prompt(content, dok_level):
 
 def get_gpt_response(prompt, client):
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4.1-nano",
         messages=[
             {"role": "system", "content": "Please follow the instructions provided and generate a response."},
             {"role": "user", "content": prompt}

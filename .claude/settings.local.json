@@ -4,7 +4,15 @@
       "Bash(git mv:*)",
       "Bash(git rm:*)",
       "Bash(ls:*)",
-      "Read(//d/University/Courses/2025_Fall/ECSE_458/GenAI-Teachers-/**)"
+      "Read(//d/University/Courses/2025_Fall/ECSE_458/GenAI-Teachers-/**)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(pip show:*)",
+      "Bash(python manage.py runserver:*)",
+      "Bash(test:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)"
     ]
   }
 }

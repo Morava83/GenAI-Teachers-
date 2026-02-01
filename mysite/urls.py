@@ -28,4 +28,23 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     from django.contrib.staticfiles.views import serve
     from django.urls import re_path
+    from django.views.static import serve as static_serve
+    from pathlib import Path
+
+    # Serve static files from /static/
     urlpatterns.insert(0, re_path(r'^static/(?P<path>.*)$', serve))
+
+    # Serve frontend assets from /assets/ (frontend/dist/assets/)
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    urlpatterns.insert(0, re_path(
+        r'^assets/(?P<path>.*)$',
+        static_serve,
+        {'document_root': BASE_DIR / 'frontend' / 'dist' / 'assets'}
+    ))
+
+    # Serve vite.svg from /vite.svg (frontend/dist/vite.svg)
+    urlpatterns.insert(0, re_path(
+        r'^vite\.svg$',
+        static_serve,
+        {'document_root': BASE_DIR / 'frontend' / 'dist'}
+    ))

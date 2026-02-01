@@ -1,10 +1,10 @@
 from typing import Literal
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 import os
-from langchain.schema import Document
+from langchain_core.documents import Document
 from dotenv import load_dotenv
 load_dotenv()
 from Problem_chatchain import query_chroma_problem
@@ -47,13 +47,18 @@ def find_route(question):
 
 def query_chroma(question, dok_level,route):
     route = find_route(question).content.strip()
-    print(route)
-    if route == "Data source: problem_vectorstore":
+    print(f"Route decision: {route}")
+
+    # Check if route contains the vectorstore names (case-insensitive)
+    route_lower = route.lower()
+    if "problem_vectorstore" in route_lower or "problem set" in route_lower or "generate" in route_lower:
         response = query_chroma_problem(question, dok_level)
-    elif route == "Data source: tutorial_vectorstore":
+    elif "tutorial_vectorstore" in route_lower or "definition" in route_lower or "concept" in route_lower:
         response = query_chroma_tutorial(question, dok_level)
     else:
-        response = route
+        # Default to problem generation since that's the primary use case
+        print(f"Warning: Could not determine route from '{route}', defaulting to problem generation")
+        response = query_chroma_problem(question, dok_level)
     return response
 
 def question_answerable(question):

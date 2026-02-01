@@ -38,8 +38,10 @@ const LearningInput = () => {
   ];
 
   const dokOptions = [
-    { value: 'LOT', label: 'LOT (Lower Order Thinking)' },
-    { value: 'HOT', label: 'HOT (Higher Order Thinking)' }
+    { value: '1', label: 'DOK 1 - Recall and Reproduction' },
+    { value: '2', label: 'DOK 2 - Skills and Concepts' },
+    { value: '3', label: 'DOK 3 - Strategic Thinking' },
+    { value: '4', label: 'DOK 4 - Extended Thinking' }
   ];
 
   const languageOptions = [

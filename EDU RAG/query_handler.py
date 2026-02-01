@@ -3,8 +3,9 @@ from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_openai import ChatOpenAI
-from gpt_module import get_gpt_response, generate_prompt
-from openai import OpenAI as GPTClient
+
+# Use TamIA inference server instead of OpenAI API
+from tamia_module import get_gpt_response, generate_prompt
 
 load_dotenv()
 
@@ -31,9 +32,13 @@ class QueryHandler:
             persist_directory=persist_directory
         )
 
-        # Initialize LLM and GPT client
-        self.llm = ChatOpenAI(model_name="gpt-4", temperature=0)
-        self.client = GPTClient(api_key=os.environ.get("OPENAI_API_KEY"))
+        # Initialize LLM for routing (still uses OpenAI for lightweight routing)
+        # Note: Could also replace this with TamIA, but keeping OpenAI for now
+        # since routing is fast and lightweight
+        self.llm = ChatOpenAI(model="gpt-4.1-nano", temperature=0)
+
+        # TamIA client is managed internally by tamia_module
+        self.client = None
 
     def get_similar_docs(self, query, k, score=False):
         """Retrieve similar documents based on the input query."""
@@ -51,6 +56,13 @@ class QueryHandler:
     def query(self, query, dok_level):
         """Process the query using Chroma and generate a response using GPT."""
         similar_docs = self.get_similar_docs(query, k=3, score=True)
-        prompt = generate_prompt(similar_docs, dok_level)
+
+        # Format the retrieved documents as context for the prompt
+        context = f"User Request: {query}\n\nRelevant Educational Content:\n"
+        for i, doc in enumerate(similar_docs, 1):
+            context += f"\nExample {i} (similarity: {doc['score']:.3f}):\n"
+            context += f"{doc['content']}\n"
+
+        prompt = generate_prompt(context, dok_level)
         response = get_gpt_response(prompt, self.client)
         return response
