@@ -1,8 +1,8 @@
 """
-TamIA Module - Drop-in replacement for gpt_module.py
+Rorqual Module - Drop-in replacement for gpt_module.py
 
 This module provides the same interface as gpt_module.py but routes requests
-to a persistent inference server running on the TamIA cluster.
+to a persistent inference server running on the Rorqual cluster.
 
 Features:
 - Automatically checks if an inference node is running
@@ -21,13 +21,83 @@ import requests
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 from dotenv import load_dotenv
-from tamia_config import TAMIA_CONFIG, validate_config
+from rorqual_config import RORQUAL_CONFIG, validate_config
 
 load_dotenv()
 
 # Set up logging
-logging.basicConfig(level=logging.INFO if TAMIA_CONFIG['debug'] else logging.WARNING)
+logging.basicConfig(level=logging.INFO if RORQUAL_CONFIG['debug'] else logging.WARNING)
 logger = logging.getLogger(__name__)
+
+# Global SSH client for reuse (avoids repeated MFA)
+_ssh_client = None
+
+
+def _get_or_create_ssh():
+    """
+    Get existing SSH client or create new one (reuses connection to avoid MFA on every call).
+
+    Returns:
+        paramiko.SSHClient
+    """
+    global _ssh_client
+
+    # Return existing client if still connected
+    if _ssh_client is not None:
+        try:
+            # Test if connection is still alive
+            transport = _ssh_client.get_transport()
+            if transport and transport.is_active():
+                return _ssh_client
+        except:
+            pass
+
+        # Connection is dead, close it
+        try:
+            _ssh_client.close()
+        except:
+            pass
+        _ssh_client = None
+
+    # Create new connection
+    logger.info("Establishing new SSH connection (may require MFA approval on your phone)...")
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    ssh.connect(
+        hostname=RORQUAL_CONFIG['host'],
+        username=RORQUAL_CONFIG['username'],
+        key_filename=RORQUAL_CONFIG['ssh_key_path'],
+        timeout=60  # Longer timeout for MFA approval
+    )
+
+    _ssh_client = ssh
+    logger.info("SSH connection established successfully")
+    return _ssh_client
+
+
+def _run_ssh_command(command):
+    """
+    Run SSH command using persistent connection (reuses SSH client to avoid repeated MFA).
+
+    Args:
+        command: Command to run on remote host
+
+    Returns:
+        tuple: (stdout, stderr, exit_code)
+    """
+    try:
+        ssh = _get_or_create_ssh()
+        stdin, stdout, stderr = ssh.exec_command(command, timeout=30)
+
+        out = stdout.read().decode()
+        err = stderr.read().decode()
+        exit_code = stdout.channel.recv_exit_status()
+
+        return out, err, exit_code
+    except Exception as e:
+        logger.error(f"SSH command failed: {e}")
+        raise RuntimeError(f"SSH command failed: {e}")
 
 # Global tunnel process
 _tunnel_process = None
@@ -90,7 +160,7 @@ def generate_prompt(content, dok_level):
 
 def _openai_fallback(prompt):
     """
-    Fallback to OpenAI API when TamIA is disabled.
+    Fallback to OpenAI API when Rorqual is disabled.
 
     Args:
         prompt (str): The prompt to send
@@ -130,7 +200,7 @@ def get_gpt_response(prompt, client=None):
     """
     Drop-in replacement for gpt_module.get_gpt_response()
 
-    Routes requests to TamIA inference server instead of OpenAI API.
+    Routes requests to Rorqual inference server instead of OpenAI API.
     Automatically manages node lifecycle (spin up, shutdown, recovery).
 
     Args:
@@ -141,8 +211,8 @@ def get_gpt_response(prompt, client=None):
         str: The model's response
     """
 
-    if not TAMIA_CONFIG['enabled']:
-        logger.info("TamIA is disabled. Using OpenAI fallback.")
+    if not RORQUAL_CONFIG['enabled']:
+        logger.info("Rorqual is disabled. Using OpenAI fallback.")
         return _openai_fallback(prompt)
 
     # Validate configuration
@@ -164,7 +234,7 @@ def get_gpt_response(prompt, client=None):
 
         # 3. If no node or node is unhealthy, spin up new one
         if state is None:
-            logger.info("No running node found. Spinning up new TamIA node...")
+            logger.info("No running node found. Spinning up new Rorqual node...")
             state = _spin_up_node()
             logger.info(f"Node ready: job_id={state['job_id']}, node={state['node_name']}")
         else:
@@ -194,7 +264,7 @@ def get_gpt_response(prompt, client=None):
             return response
         except Exception as recovery_error:
             logger.error(f"Recovery failed: {recovery_error}", exc_info=True)
-            return f"Failed to generate response due to TamIA error: {str(e)}"
+            return f"Failed to generate response due to Rorqual error: {str(e)}"
 
 
 def _check_node_status() -> Optional[Dict]:
@@ -206,13 +276,13 @@ def _check_node_status() -> Optional[Dict]:
     """
 
     # 1. Check if state file exists
-    if not os.path.exists(TAMIA_CONFIG['node_state_file']):
+    if not os.path.exists(RORQUAL_CONFIG['node_state_file']):
         logger.debug("No state file found")
         return None
 
     # 2. Load state
     try:
-        with open(TAMIA_CONFIG['node_state_file'], 'r') as f:
+        with open(RORQUAL_CONFIG['node_state_file'], 'r') as f:
             state = json.load(f)
     except (json.JSONDecodeError, IOError) as e:
         logger.warning(f"Failed to load state file: {e}")
@@ -222,12 +292,10 @@ def _check_node_status() -> Optional[Dict]:
     if not job_id:
         return None
 
-    # 3. SSH to TamIA and check if job is still running
+    # 3. SSH to Rorqual/Rorqual and check if job is still running
     try:
-        ssh = _get_ssh_client()
-        stdin, stdout, stderr = ssh.exec_command(f'squeue -j {job_id} -h -o "%T"')
-        job_state = stdout.read().decode().strip()
-        ssh.close()
+        output, stderr, returncode = _run_ssh_command(f'squeue -j {job_id} -h -o "%T"')
+        job_state = output.strip()
 
         if not job_state:
             logger.info(f"Job {job_id} is no longer in queue")
@@ -269,13 +337,13 @@ def _should_shutdown_node(state: Dict) -> bool:
         True if node should be shut down, False otherwise
     """
 
-    if not TAMIA_CONFIG['auto_shutdown']:
+    if not RORQUAL_CONFIG['auto_shutdown']:
         return False
 
     last_used = datetime.fromisoformat(state.get('last_used', state.get('started_at')))
     idle_time = (datetime.now() - last_used).total_seconds()
 
-    return idle_time > TAMIA_CONFIG['idle_shutdown_timeout']
+    return idle_time > RORQUAL_CONFIG['idle_shutdown_timeout']
 
 
 def _shutdown_node(state: Dict):
@@ -290,14 +358,12 @@ def _shutdown_node(state: Dict):
 
     try:
         # 1. Cancel SLURM job
-        ssh = _get_ssh_client()
-        ssh.exec_command(f'scancel {job_id}')
+        _run_ssh_command(f'scancel {job_id}')
 
         # 2. Create STOP_SERVER file to prevent auto-resubmit
-        project_dir = TAMIA_CONFIG['project_dir']
-        ssh.exec_command(f'touch {project_dir}/STOP_SERVER')
+        project_dir = RORQUAL_CONFIG['project_dir']
+        _run_ssh_command(f'touch {project_dir}/STOP_SERVER')
 
-        ssh.close()
         logger.info(f"Shutdown job {job_id}")
 
     except Exception as e:
@@ -319,7 +385,7 @@ def _shutdown_node(state: Dict):
 
     # 4. Remove state file
     try:
-        os.remove(TAMIA_CONFIG['node_state_file'])
+        os.remove(RORQUAL_CONFIG['node_state_file'])
     except Exception as e:
         logger.warning(f"Failed to remove state file: {e}")
 
@@ -332,18 +398,14 @@ def _spin_up_node() -> Dict:
         Dict with job state (job_id, node_name, tunnel_port, etc.)
     """
 
-    ssh = _get_ssh_client()
-
     try:
         # 1. Remove STOP_SERVER file if it exists
-        project_dir = TAMIA_CONFIG['project_dir']
-        ssh.exec_command(f'rm -f {project_dir}/STOP_SERVER')
+        project_dir = RORQUAL_CONFIG['project_dir']
+        _run_ssh_command(f'rm -f {project_dir}/STOP_SERVER')
 
         # 2. Submit job
         script_path = f"{project_dir}/scripts/start_inference_server.sh"
-        stdin, stdout, stderr = ssh.exec_command(f'sbatch {script_path}')
-        output = stdout.read().decode()
-        error = stderr.read().decode()
+        output, error, returncode = _run_ssh_command(f'sbatch {script_path}')
 
         if error:
             logger.warning(f"sbatch stderr: {error}")
@@ -356,16 +418,16 @@ def _spin_up_node() -> Dict:
         logger.info(f"Submitted job {job_id}")
 
         # 3. Wait for job to start and get node name
-        node_name = _wait_for_job_start(ssh, job_id, timeout=TAMIA_CONFIG['node_startup_timeout'])
+        node_name = _wait_for_job_start(job_id, timeout=RORQUAL_CONFIG['node_startup_timeout'])
         logger.info(f"Job started on node {node_name}")
 
         # 4. Create SSH tunnel to node
-        tunnel_port = TAMIA_CONFIG['local_tunnel_port']
-        _create_ssh_tunnel(node_name, TAMIA_CONFIG['inference_port'])
+        tunnel_port = RORQUAL_CONFIG['local_tunnel_port']
+        _create_ssh_tunnel(node_name, RORQUAL_CONFIG['inference_port'])
         logger.info(f"SSH tunnel created: localhost:{tunnel_port}")
 
         # 5. Wait for server to be ready
-        _wait_for_server_ready(tunnel_port, timeout=TAMIA_CONFIG['server_ready_timeout'])
+        _wait_for_server_ready(tunnel_port, timeout=RORQUAL_CONFIG['server_ready_timeout'])
         logger.info("Inference server is ready")
 
         # 6. Save state
@@ -380,16 +442,16 @@ def _spin_up_node() -> Dict:
 
         return state
 
-    finally:
-        ssh.close()
+    except Exception as e:
+        logger.error(f"Error spinning up node: {e}")
+        raise
 
 
-def _wait_for_job_start(ssh, job_id: str, timeout: int = 300) -> str:
+def _wait_for_job_start(job_id: str, timeout: int = 300) -> str:
     """
     Wait for SLURM job to start and return the node name.
 
     Args:
-        ssh: SSH client connection
         job_id: SLURM job ID
         timeout: Timeout in seconds
 
@@ -400,8 +462,8 @@ def _wait_for_job_start(ssh, job_id: str, timeout: int = 300) -> str:
     start_time = time.time()
 
     while time.time() - start_time < timeout:
-        stdin, stdout, stderr = ssh.exec_command(f'squeue -j {job_id} -h -o "%T %N"')
-        output = stdout.read().decode().strip()
+        output, stderr, returncode = _run_ssh_command(f'squeue -j {job_id} -h -o "%T %N"')
+        output = output.strip()
 
         if not output:
             raise RuntimeError(f"Job {job_id} disappeared from queue")
@@ -442,10 +504,10 @@ def _create_ssh_tunnel(node_name: str, remote_port: int):
             except:
                 pass
 
-    local_port = TAMIA_CONFIG['local_tunnel_port']
-    username = TAMIA_CONFIG['username']
-    host = TAMIA_CONFIG['host']
-    ssh_key = TAMIA_CONFIG['ssh_key_path']
+    local_port = RORQUAL_CONFIG['local_tunnel_port']
+    username = RORQUAL_CONFIG['username']
+    host = RORQUAL_CONFIG['host']
+    ssh_key = RORQUAL_CONFIG['ssh_key_path']
 
     # Create SSH tunnel: local -> login node -> compute node
     # This is a two-hop tunnel since compute nodes aren't directly accessible
@@ -562,32 +624,32 @@ def _query_inference_server(prompt: str, tunnel_port: int) -> str:
         response = requests.post(
             url,
             json=payload,
-            timeout=TAMIA_CONFIG['request_timeout']
+            timeout=RORQUAL_CONFIG['request_timeout']
         )
         response.raise_for_status()
         return response.json()['response']
 
     except requests.exceptions.Timeout:
-        raise TimeoutError(f"Request timed out after {TAMIA_CONFIG['request_timeout']} seconds")
+        raise TimeoutError(f"Request timed out after {RORQUAL_CONFIG['request_timeout']} seconds")
     except requests.exceptions.RequestException as e:
         raise RuntimeError(f"Request failed: {e}")
 
 
 def _get_ssh_client():
     """
-    Create and return an SSH client connected to TamIA.
+    Create and return an SSH client connected to Rorqual.
 
     Returns:
-        paramiko.SSHClient connected to TamIA
+        paramiko.SSHClient connected to Rorqual
     """
 
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     ssh.connect(
-        hostname=TAMIA_CONFIG['host'],
-        username=TAMIA_CONFIG['username'],
-        key_filename=TAMIA_CONFIG['ssh_key_path'],
+        hostname=RORQUAL_CONFIG['host'],
+        username=RORQUAL_CONFIG['username'],
+        key_filename=RORQUAL_CONFIG['ssh_key_path'],
         timeout=30
     )
 
@@ -603,7 +665,7 @@ def _save_state(state: Dict):
     """
 
     try:
-        with open(TAMIA_CONFIG['node_state_file'], 'w') as f:
+        with open(RORQUAL_CONFIG['node_state_file'], 'w') as f:
             json.dump(state, f, indent=2)
     except Exception as e:
         logger.error(f"Failed to save state: {e}")
@@ -618,7 +680,7 @@ if __name__ == "__main__":
     print("\nGenerated Prompt:")
     print(prompt)
 
-    print("\nQuerying TamIA inference server...")
+    print("\nQuerying Rorqual inference server...")
     response = get_gpt_response(prompt)
     print("\nAI Generated Response:")
     print(response)

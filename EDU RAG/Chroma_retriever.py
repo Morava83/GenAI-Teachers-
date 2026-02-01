@@ -1,8 +1,6 @@
 import dotenv
-import openai
 from langchain_community.document_loaders import PyPDFium2Loader
 import os
-from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 

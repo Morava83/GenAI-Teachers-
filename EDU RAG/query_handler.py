@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
-# Use TamIA inference server instead of OpenAI API
-from tamia_module import get_gpt_response, generate_prompt
+# Use Rorqual inference server instead of OpenAI API
+from rorqual_module import get_gpt_response, generate_prompt
 
 load_dotenv()
 

@@ -12,7 +12,14 @@
       "Bash(test:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:docs.alliancecan.ca)",
+      "WebFetch(domain:www.alliancecan.ca)",
+      "Bash(ssh:*)",
+      "Bash(wsl --status:*)",
+      "Bash(wsl echo:*)",
+      "Bash(wsl bash -c \"mkdir -p ~/.ssh/sockets && chmod 700 ~/.ssh && echo ''SSH directory created''\")",
+      "Bash(wsl bash:*)"
     ]
   }
 }

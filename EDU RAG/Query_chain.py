@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from Problem_chatchain import query_chroma_problem
 from Tutorial_chatchain import query_chroma_tutorial
-from tamia_module import get_gpt_response
+from rorqual_module import get_gpt_response
 
 
 def find_route(question):

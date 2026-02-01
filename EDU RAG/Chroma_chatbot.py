@@ -1,24 +1,10 @@
 import dotenv
-from langchain.prompts import (
-    PromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-    ChatPromptTemplate,
-)
-from langchain.chains import LLMChain
-from langchain_core.output_parsers import StrOutputParser
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.schema.runnable import RunnablePassthrough
-from tamia_module import get_gpt_response, generate_prompt
+from rorqual_module import get_gpt_response, generate_prompt
 from Chroma_retriever import create_retriever, load_data
 import os
 dotenv.load_dotenv()
-from langchain.agents import (
-    Tool,
-    AgentExecutor,
-)
-from langchain import hub
 
 REVIEWS_CHROMA_PATH = "chroma_data/"
 
@@ -27,7 +13,7 @@ reviews_vector_db = Chroma(
     embedding_function=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 )
 
-docs = load_data("EDU RAG/examples/Math 140 Tutorial 3 Solutions.pdf")
+docs = load_data("examples/Math 140 Tutorial 3 Solutions.pdf")
 reviews_retriever  = reviews_vector_db.as_retriever(k=10)
 class ChatChain:
     def __init__(self):

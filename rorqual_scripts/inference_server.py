@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-TamIA Inference Server
+Rorqual Inference Server
 
-FastAPI server that runs on TamIA compute nodes and serves inference requests
+FastAPI server that runs on Rorqual compute nodes and serves inference requests
 for the GPT-OSS-20B model.
 
 This server:
@@ -30,7 +30,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # FastAPI app
-app = FastAPI(title="TamIA Math Problem Generator Inference Server")
+app = FastAPI(title="Rorqual Math Problem Generator Inference Server")
 
 # Global model and tokenizer
 model = None
@@ -69,7 +69,7 @@ async def load_model():
     global model, tokenizer, device
 
     logger.info("=" * 80)
-    logger.info("Starting TamIA Inference Server")
+    logger.info("Starting Rorqual Inference Server")
     logger.info("=" * 80)
 
     # Get model path from environment variable
@@ -230,7 +230,7 @@ async def health():
 async def root():
     """Root endpoint"""
     return {
-        "message": "TamIA Math Problem Generator Inference Server",
+        "message": "Rorqual Math Problem Generator Inference Server",
         "endpoints": {
             "/generate": "POST - Generate text from prompt",
             "/health": "GET - Health check",
@@ -241,7 +241,7 @@ async def root():
 def main():
     """Main entry point"""
 
-    parser = argparse.ArgumentParser(description="TamIA Inference Server")
+    parser = argparse.ArgumentParser(description="Rorqual Inference Server")
     parser.add_argument(
         '--model-path',
         type=str,

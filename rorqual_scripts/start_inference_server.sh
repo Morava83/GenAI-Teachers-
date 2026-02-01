@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --account=REPLACE_WITH_YOUR_AIP_ACCOUNT  # e.g., aip-123456
+#SBATCH --account=def-nikkilob  # RAS default account
 #SBATCH --job-name=genai-inference
 #SBATCH --nodes=1
 #SBATCH --gpus=h100:4                   # Use all 4 H100 GPUs
@@ -10,10 +10,10 @@
 #SBATCH --error=%x-%j.err               # Error file: genai-inference-<jobid>.err
 
 # ==============================================================================
-# TamIA Inference Server Startup Script
+# Rorqual Inference Server Startup Script
 #
 # This script:
-# 1. Sets up the environment on a TamIA compute node
+# 1. Sets up the environment on a Rorqual compute node
 # 2. Copies the model to fast local storage ($SLURM_TMPDIR)
 # 3. Starts the FastAPI inference server
 # 4. Auto-resubmits to maintain 24/7 availability (unless STOP_SERVER file exists)
@@ -22,7 +22,7 @@
 set -e  # Exit on error
 
 echo "=============================================================================="
-echo "TamIA Inference Server Startup"
+echo "Rorqual Inference Server Startup"
 echo "=============================================================================="
 echo "Job ID: $SLURM_JOB_ID"
 echo "Node: $(hostname)"
