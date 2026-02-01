@@ -1,5 +1,4 @@
 import dotenv
-from langchain_openai import ChatOpenAI
 from langchain.prompts import (
     PromptTemplate,
     SystemMessagePromptTemplate,
@@ -11,21 +10,15 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.schema.runnable import RunnablePassthrough
-from gpt_module import get_gpt_response, generate_prompt
+from tamia_module import get_gpt_response, generate_prompt
 from Chroma_retriever import create_retriever, load_data
-from openai import OpenAI
 import os
 dotenv.load_dotenv()
 from langchain.agents import (
-    create_openai_functions_agent,
     Tool,
     AgentExecutor,
 )
 from langchain import hub
-
-client = OpenAI(
-  api_key=os.environ['OPENAI_API_KEY']
-)
 
 REVIEWS_CHROMA_PATH = "chroma_data/"
 
@@ -37,9 +30,8 @@ reviews_vector_db = Chroma(
 docs = load_data("EDU RAG/examples/Math 140 Tutorial 3 Solutions.pdf")
 reviews_retriever  = reviews_vector_db.as_retriever(k=10)
 class ChatChain:
-    def __init__(self, chat_model):
+    def __init__(self):
         self.retriever = create_retriever(docs)
-        self.chat_model = chat_model
 
     def run(self, user_input, dok_level):
         # Retrieve relevant documents based on user input
@@ -56,7 +48,7 @@ class ChatChain:
 
 
 if __name__ == "__main__":
-    chat_chain = ChatChain(chat_model = client)
+    chat_chain = ChatChain()
     # Example user input
     user_input = "I need information on mathematical continuity principles."
 

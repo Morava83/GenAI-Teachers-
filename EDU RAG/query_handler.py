@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_openai import ChatOpenAI
 
 # Use TamIA inference server instead of OpenAI API
 from tamia_module import get_gpt_response, generate_prompt
@@ -31,11 +30,6 @@ class QueryHandler:
             embedding_function=embedder,
             persist_directory=persist_directory
         )
-
-        # Initialize LLM for routing (still uses OpenAI for lightweight routing)
-        # Note: Could also replace this with TamIA, but keeping OpenAI for now
-        # since routing is fast and lightweight
-        self.llm = ChatOpenAI(model="gpt-4.1-nano", temperature=0)
 
         # TamIA client is managed internally by tamia_module
         self.client = None
