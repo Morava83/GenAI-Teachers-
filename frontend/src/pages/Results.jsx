@@ -19,6 +19,13 @@ const Results = () => {
     }
   }, [navigate]);
 
+  // Re-render MathJax whenever content changes
+  useEffect(() => {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise().catch((err) => console.warn('MathJax error:', err));
+    }
+  }, [problem, showHints, showSolution]);
+
   const handleNewProblem = () => {
     navigate('/learning');
   };
