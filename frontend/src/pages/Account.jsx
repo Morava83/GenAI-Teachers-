@@ -43,7 +43,7 @@ const Account = () => {
       const { data, error: fetchError } = await supabase
         .from('users')
         .select('*')
-        .eq('email', 'admin@mathforge.edu')
+        .eq('email', 'admin@mathmind.edu')
         .single();
 
       if (fetchError) {
@@ -51,12 +51,11 @@ const Account = () => {
         setUser({
           id: '1',
           name: 'Admin User',
-          email: 'admin@mathforge.edu',
+          email: 'admin@mathmind.edu',
           role: 'Administrator',
           avatar_url: null,
           created_at: '2024-01-15',
           problems_generated: 127,
-          students_helped: 45,
           settings: {
             defaultLanguage: 'English',
             includeHints: true,
@@ -78,12 +77,11 @@ const Account = () => {
       setUser({
         id: '1',
         name: 'Admin User',
-        email: 'admin@mathforge.edu',
+        email: 'admin@mathmind.edu',
         role: 'Administrator',
         avatar_url: null,
         created_at: '2024-01-15',
         problems_generated: 127,
-        students_helped: 45,
         settings: {
           defaultLanguage: 'English',
           includeHints: true,
@@ -296,13 +294,13 @@ const Account = () => {
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-icon">∑</div>
-              <div className="stat-value">{user.problems_generated || 0}</div>
+              <div className="stat-value">{problemHistory.length}</div>
               <div className="stat-label">Problems Generated</div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">π</div>
-              <div className="stat-value">{user.students_helped || 0}</div>
-              <div className="stat-label">Students Helped</div>
+              <div className="stat-icon">📁</div>
+              <div className="stat-value">{problemSets.length}</div>
+              <div className="stat-label">Sets Created</div>
             </div>
           </div>
         </div>

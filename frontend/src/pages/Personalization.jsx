@@ -31,21 +31,21 @@ const Personalization = () => {
   const questions = [
     {
       id: 1,
-      label: "What are your hobbies?",
-      placeholder: "Enter your hobbies, separated by commas",
-      example: "reading, swimming, photography"
+      label: "What topics are your students currently studying?",
+      placeholder: "Enter current topics, separated by commas",
+      example: "fractions, linear equations, geometry basics"
     },
     {
       id: 2,
-      label: "What topics are you always interested in discussing?",
-      placeholder: "Enter topics you're interested in, separated by commas",
-      example: "technology, art, science"
+      label: "What are your students' interests or hobbies?",
+      placeholder: "Enter student interests, separated by commas",
+      example: "sports, video games, music, animals"
     },
     {
       id: 3,
-      label: "What types of books and videos do you usually enjoy?",
-      placeholder: "Enter your preferred content types, separated by commas",
-      example: "mystery novels, educational videos, documentaries"
+      label: "What real-world themes would you like problems to include?",
+      placeholder: "Enter themes or contexts, separated by commas",
+      example: "cooking, travel, shopping, science experiments"
     }
   ];
 
@@ -221,7 +221,7 @@ const Personalization = () => {
       <div className="personalization-container">
         <div className="personalization-header">
           <h1>Personalize Your Experience</h1>
-          <p className="subtitle">Help us create better problems for you</p>
+          <p className="subtitle">Help us create better problems for your students</p>
         </div>
 
         <div className="progress-bar">
@@ -250,7 +250,7 @@ const Personalization = () => {
             Skip
           </button>
           <button className="next-btn" onClick={handleNext}>
-            {currentQuestion === totalQuestions ? 'Start Learning' : 'Next'}
+            {currentQuestion === totalQuestions ? 'Start Generating' : 'Next'}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = "http://127.0.0.1:8000/api"
+// Use environment variable for production, fallback to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"
 export const generateProblem = async (formData) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/generate`, formData, {

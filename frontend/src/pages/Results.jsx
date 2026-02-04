@@ -75,7 +75,7 @@ const Results = () => {
       </div>
 
       <div className="results-header">
-        <h1>Your Learning Task</h1>
+        <h1>Generated Problem</h1>
       </div>
 
       <div className="results-content">

@@ -101,7 +101,7 @@ const LearningInput = () => {
     e.preventDefault();
     
     if (!formData.topic && !formData.areaSubject) {
-      alert('Please enter what you want to learn or select an area/subject');
+      alert('Please enter a topic or select an area/subject');
       return;
     }
 
@@ -151,11 +151,11 @@ const LearningInput = () => {
       </div>
 
       <div className="left-panel">
-        <h1>What you want to learn?</h1>
+        <h1>Generate a Problem</h1>
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="topic">I want to learn:</label>
+            <label htmlFor="topic">Topic:</label>
             <input
               type="text"
               id="topic"
@@ -257,16 +257,16 @@ const LearningInput = () => {
                 </select>
               </div>
 
-              {/* Interest/Value */}
+              {/* Context/Theme */}
               <div className="form-group">
-                <label htmlFor="interestValue">Interest/Value/Proficiency:</label>
+                <label htmlFor="interestValue">Context/Theme:</label>
                 <input
                   type="text"
                   id="interestValue"
                   name="interestValue"
                   value={formData.interestValue}
                   onChange={handleInputChange}
-                  placeholder="e.g., real-world applications, career relevance"
+                  placeholder="e.g., sports, cooking, travel, technology"
                 />
               </div>
 
@@ -301,9 +301,9 @@ const LearningInput = () => {
             </div>
           )}
 
-          {/* Tags/Interests */}
+          {/* Tags/Themes */}
           <div className="form-group">
-            <h3>and I want to involve:</h3>
+            <h3>Topics of Interest:</h3>
             <div className="tag-container">
               {tags.map(tag => (
                 <span key={tag} className="tag">
