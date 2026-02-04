@@ -4,16 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>MathForge - AI Problem Generator for Teachers</title>
     <!-- MathJax for rendering LaTeX math -->
     <script>
       window.MathJax = {
         tex: {
-          inlineMath: [['\\(', '\\)']],
-          displayMath: [['\\[', '\\]']]
+          inlineMath: [['\\(', '\\)'], ['$', '$']],
+          displayMath: [['\\[', '\\]'], ['$$', '$$']],
+          processEscapes: true,
+          processEnvironments: true
         },
         options: {
-          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+          ignoreHtmlClass: 'no-mathjax',
+          processHtmlClass: 'mathjax-process'
+        },
+        startup: {
+          pageReady: () => {
+            console.log('MathJax is ready');
+            return MathJax.startup.defaultPageReady();
+          }
         }
       };
     </script>

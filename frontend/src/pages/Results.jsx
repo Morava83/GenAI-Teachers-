@@ -7,8 +7,18 @@ const Results = () => {
   const [problem, setProblem] = useState(null);
   const [showHints, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
+  const [settings, setSettings] = useState({
+    includeHints: true,
+    includeSolutions: true
+  });
 
   useEffect(() => {
+    // Load settings from localStorage
+    const savedSettings = localStorage.getItem('userSettings');
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings));
+    }
+
     // Load the generated problem from localStorage
     const stored = localStorage.getItem('generatedProblem');
     if (stored) {
@@ -21,9 +31,19 @@ const Results = () => {
 
   // Re-render MathJax whenever content changes
   useEffect(() => {
-    if (window.MathJax && window.MathJax.typesetPromise) {
-      window.MathJax.typesetPromise().catch((err) => console.warn('MathJax error:', err));
-    }
+    const renderMath = () => {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        // Clear any previous typesetting first
+        window.MathJax.typesetClear && window.MathJax.typesetClear();
+        // Then typeset the new content
+        window.MathJax.typesetPromise()
+          .catch((err) => console.warn('MathJax error:', err));
+      }
+    };
+
+    // Give the DOM a moment to update, then render math
+    const timer = setTimeout(renderMath, 100);
+    return () => clearTimeout(timer);
   }, [problem, showHints, showSolution]);
 
   const handleNewProblem = () => {
@@ -61,24 +81,30 @@ const Results = () => {
           />
         </div>
 
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <button 
-            className={`action-button ${showHints ? 'active' : ''}`}
-            onClick={() => setShowHints(!showHints)}
-          >
-            {showHints ? 'Hide Hints' : 'Show Hints'}
-          </button>
-          <button 
-            className={`action-button ${showSolution ? 'active' : ''}`}
-            onClick={() => setShowSolution(!showSolution)}
-          >
-            {showSolution ? 'Hide Solution' : 'Show Solution'}
-          </button>
-        </div>
+        {/* Action Buttons - only show if at least one is enabled */}
+        {(settings.includeHints || settings.includeSolutions) && (
+          <div className="action-buttons">
+            {settings.includeHints && (
+              <button 
+                className={`action-button ${showHints ? 'active' : ''}`}
+                onClick={() => setShowHints(!showHints)}
+              >
+                {showHints ? 'Hide Hints' : 'Show Hints'}
+              </button>
+            )}
+            {settings.includeSolutions && (
+              <button 
+                className={`action-button ${showSolution ? 'active' : ''}`}
+                onClick={() => setShowSolution(!showSolution)}
+              >
+                {showSolution ? 'Hide Solution' : 'Show Solution'}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Hints Section */}
-        {showHints && (
+        {settings.includeHints && showHints && (
           <div className="hints-section">
             <h3>💡 Hints</h3>
             <div 
@@ -89,7 +115,7 @@ const Results = () => {
         )}
 
         {/* Solution Section */}
-        {showSolution && (
+        {settings.includeSolutions && showSolution && (
           <div className="solution-section">
             <h3>✅ Solution</h3>
             <div 

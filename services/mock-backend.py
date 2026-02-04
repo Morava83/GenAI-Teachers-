@@ -51,7 +51,7 @@ HOST = os.environ.get("MOCK_BACKEND_HOST", "127.0.0.1")
 PORT = int(os.environ.get("MOCK_BACKEND_PORT", "8000"))
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama3-70b-8192")  # "llama70b" on Groq
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")  # Current Groq Llama 70B
 GROQ_ENDPOINT = os.environ.get("GROQ_ENDPOINT", "https://api.groq.com/openai/v1/chat/completions")
 
 
@@ -81,12 +81,53 @@ def _safe_str(x) -> str:
     return "" if x is None else str(x)
 
 
+# DOK (Depth of Knowledge) level definitions
+DOK_LEVELS = {
+    "1": {
+        "name": "Level 1 - Recall and Reproduction",
+        "description": "Mathematical Recall and Reproduction: Tasks at this level require students to recall facts, definitions, or procedures.",
+        "examples": "Apply a well-known algorithm, Identify a plane or three-dimensional figure, Perform a specified or routine procedure.",
+        "math_example": "The price of gasoline was $2.159 per gallon last week. This week the new price is $2.319 per gallon. Determine the percent of increase.",
+    },
+    "2": {
+        "name": "Level 2 - Skills and Concepts",
+        "description": "Mathematical Skills and Concepts: Tasks at this level involve some mental processing beyond recalling or reproducing a response.",
+        "examples": "Solve a routine problem requiring multiple steps, or the application of multiple concepts, interpreting data, explaining relationships between concepts.",
+        "math_example": "On a trip across the country, Justin determined that he would have to drive about 2,763 miles. What speed would he have to average to complete the trip in no more than 50 hours of driving time?",
+    },
+    "3": {
+        "name": "Level 3 - Strategic Thinking",
+        "description": "Mathematical Strategic Thinking: Tasks at this level require deep understanding and reasoning, planning, and using evidence.",
+        "examples": "Interpret information from a complex graph, Develop logical arguments for a concept, Solve a multiple-step problem supported with a mathematical explanation that justifies the answer.",
+        "math_example": "A sweater costs $63.99. The sale price is $47.99. What is the percent decrease? If the store then reduces sale items by 1/3 of the sale price, what is the new price?",
+    },
+    "4": {
+        "name": "Level 4 - Extended Thinking",
+        "description": "Mathematical Extended Thinking: Tasks at this level require complex reasoning, planning, developing, and thinking over an extended period of time.",
+        "examples": "Relate mathematical concepts to real-world applications in new situations, Design a mathematical model to inform and solve a practical or abstract situation.",
+        "math_example": "Visit three local grocery stores and find prices of three different sizes of the same product. Determine the unit price for each and decide which is the best buy, justifying your decision with mathematical work.",
+    },
+    # Also support LOT/HOT format from the frontend
+    "LOT": {
+        "name": "Lower Order Thinking (DOK 1-2)",
+        "description": "Lower Order Thinking encompasses recall, reproduction, and basic skills. Students recall facts, apply algorithms, and solve routine problems.",
+        "examples": "Recall facts and definitions, apply formulas, solve routine multi-step problems, interpret simple data.",
+        "math_example": "Calculate the area of a rectangle with length 12cm and width 8cm.",
+    },
+    "HOT": {
+        "name": "Higher Order Thinking (DOK 3-4)",
+        "description": "Higher Order Thinking requires strategic thinking, reasoning, planning, and extended analysis. Students must justify answers, make connections, and apply concepts to new situations.",
+        "examples": "Develop logical arguments, solve complex multi-step problems with justification, design mathematical models, relate concepts to real-world applications.",
+        "math_example": "A store offers 20% off, then an additional 15% off the sale price. Is this the same as 35% off the original price? Explain your reasoning mathematically.",
+    },
+}
+
+
 def _build_prompt(form: dict) -> tuple[str, str]:
     topic = _safe_str(form.get("topic")).strip()
     area = _safe_str(form.get("areaSubject")).strip()
     grade = _safe_str(form.get("grade")).strip()
-    standards = _safe_str(form.get("standards")).strip()
-    dok = _safe_str(form.get("dok")).strip()
+    dok_raw = _safe_str(form.get("dok")).strip()
     difficulty = _safe_str(form.get("difficulty")).strip()
     language = _safe_str(form.get("language")).strip() or "English"
     interest = _safe_str(form.get("interestValue")).strip()
@@ -98,43 +139,137 @@ def _build_prompt(form: dict) -> tuple[str, str]:
     if not isinstance(tags, list):
         tags = []
 
-    user_constraints = {
-        "topic": topic,
-        "areaSubject": area,
-        "grade": grade,
-        "standards": standards,
-        "dok": dok,
-        "difficulty": difficulty,
-        "language": language,
-        "interestValue": interest,
-        "format": fmt,
-        "selectedTags": tags,
-        "additionalRequirements": additional,
-    }
-
+    # Build the system prompt
     system = (
-        "You are an expert teacher and problem writer. "
-        "Generate ONE high-quality learning problem that matches the user's constraints. "
-        "Return ONLY valid JSON with exactly these keys: "
-        "problem, hints, solution, answer. "
-        "Values should be HTML strings (safe to render with dangerouslySetInnerHTML). "
-        "No markdown fences, no extra text."
+        "You are an expert mathematics teacher and problem writer. "
+        "Generate ONE high-quality math problem that precisely matches the teacher's requirements. "
+        "Return ONLY valid JSON with exactly these keys: problem, hints, solution, answer. "
+        "Values should be HTML strings with LaTeX math using $...$ delimiters. "
+        "CRITICAL: In JSON, you MUST double-escape all backslashes for LaTeX commands. "
+        "Example: Use \\\\frac{1}{2} NOT \\frac{1}{2}. Use \\\\sqrt{x} NOT \\sqrt{x}. "
+        "No markdown fences, no extra text outside the JSON."
     )
 
-    user = (
-        "Create a single math learning task.\n"
-        f"Constraints JSON:\n{json.dumps(user_constraints, ensure_ascii=False)}\n\n"
-        "JSON output schema:\n"
-        '{\n'
-        '  "problem": "<p>...</p>",\n'
-        '  "hints": "<ol><li>...</li></ol>",\n'
-        '  "solution": "<p>Step-by-step...</p>",\n'
-        '  "answer": "<p><strong>Final:</strong> ...</p>"\n'
-        '}\n'
-        "Important: keep it self-contained; do not reference external files."
-    )
+    # Build detailed user prompt
+    prompt_parts = ["Create a mathematics problem with the following specifications:\n"]
+
+    # Topic/Subject
+    if topic:
+        prompt_parts.append(f"**Topic:** {topic}")
+    if area:
+        prompt_parts.append(f"**Subject Area:** {area}")
+
+    # Grade level
+    if grade:
+        prompt_parts.append(f"**Grade Level:** Grade {grade}")
+
+    # DOK Level - this is critical
+    if dok_raw and dok_raw in DOK_LEVELS:
+        dok_info = DOK_LEVELS[dok_raw]
+        prompt_parts.append(f"\n**Depth of Knowledge (DOK):** {dok_info['name']}")
+        prompt_parts.append(f"- Description: {dok_info['description']}")
+        prompt_parts.append(f"- Task Examples: {dok_info['examples']}")
+        prompt_parts.append(f"- Example Problem Style: {dok_info['math_example']}")
+        prompt_parts.append("- IMPORTANT: The problem MUST match this DOK level's cognitive demand.")
+
+    # Difficulty
+    if difficulty:
+        prompt_parts.append(f"\n**Difficulty:** {difficulty.capitalize()}")
+
+    # Format - STRICT enforcement
+    if fmt:
+        prompt_parts.append(f"\n**REQUIRED FORMAT: {fmt}**")
+        if fmt == "Multiple Choice":
+            prompt_parts.append("YOU MUST format this as a multiple choice question with:")
+            prompt_parts.append("- A clear question/problem statement")
+            prompt_parts.append("- Exactly 4 answer choices labeled A), B), C), D)")
+            prompt_parts.append("- Include the choices IN the problem field")
+            prompt_parts.append("- The answer field should state which letter is correct and why")
+        elif fmt == "Short Answer":
+            prompt_parts.append("Format as a short answer question requiring a brief, specific response.")
+        elif fmt == "Word Problem":
+            prompt_parts.append("YOU MUST present this as a real-world word problem with:")
+            prompt_parts.append("- A realistic scenario/context")
+            prompt_parts.append("- Characters or situations students can relate to")
+            prompt_parts.append("- Clear question asking what to solve for")
+        elif fmt == "Step-by-Step Solution":
+            prompt_parts.append("Focus on providing extremely detailed step-by-step working in the solution.")
+        elif fmt == "Mixed Format":
+            prompt_parts.append("You may use any appropriate format for this problem.")
+
+    # Language
+    prompt_parts.append(f"\n**Language:** {language}")
+
+    # Student interests/context
+    if interest:
+        prompt_parts.append(f"**Context/Interest Area:** {interest}")
+
+    # Tags/themes to incorporate
+    if tags:
+        prompt_parts.append(f"**Incorporate these themes/interests:** {', '.join(tags)}")
+
+    # Additional requirements
+    if additional:
+        prompt_parts.append(f"**Additional Requirements:** {additional}")
+
+    # Output format
+    prompt_parts.append("\n**Output Format (JSON):**")
+    prompt_parts.append("""{
+  "problem": "<p>The problem statement with any necessary context...</p>",
+  "hints": "<ol><li>First hint...</li><li>Second hint...</li></ol>",
+  "solution": "<p>Step-by-step solution with clear explanations...</p>",
+  "answer": "<p><strong>Final Answer:</strong> The answer...</p>"
+}""")
+
+    prompt_parts.append("\nIMPORTANT: Return ONLY the JSON object, no other text.")
+    if fmt:
+        prompt_parts.append(f"REMINDER: The format MUST be {fmt}.")
+
+    user = "\n".join(prompt_parts)
 
     return system, user
+
+
+def _fix_latex_escapes(text: str) -> str:
+    r"""
+    Fix LaTeX backslashes that get mangled by JSON parsing.
+    JSON interprets \f as form feed, \n as newline, etc.
+    We need to escape these so LaTeX commands like \frac, \left work.
+    """
+    # The LLM sometimes outputs single backslashes which break JSON parsing
+    # because \f, \n, \r, \t, \b are escape sequences.
+    # We need to carefully escape single backslashes before LaTeX commands.
+    
+    # Replace common problematic sequences that JSON interprets as escape chars
+    # \f (form feed), \n (newline), \r (carriage return), \t (tab), \b (backspace)
+    replacements = [
+        ('\\frac', '\\\\frac'),
+        ('\\forall', '\\\\forall'),  
+        ('\\fbox', '\\\\fbox'),
+        ('\\nabla', '\\\\nabla'),
+        ('\\not', '\\\\not'),
+        ('\\neg', '\\\\neg'),
+        ('\\nu', '\\\\nu'),
+        ('\\rangle', '\\\\rangle'),
+        ('\\right', '\\\\right'),
+        ('\\rm', '\\\\rm'),
+        ('\\rho', '\\\\rho'),
+        ('\\tau', '\\\\tau'),
+        ('\\to', '\\\\to'),
+        ('\\text', '\\\\text'),
+        ('\\times', '\\\\times'),
+        ('\\triangle', '\\\\triangle'),
+        ('\\bar', '\\\\bar'),
+        ('\\begin', '\\\\begin'),
+        ('\\beta', '\\\\beta'),
+        ('\\binom', '\\\\binom'),
+        ('\\boxed', '\\\\boxed'),
+    ]
+    
+    for old, new in replacements:
+        text = text.replace(old, new)
+    
+    return text
 
 
 def _extract_first_json(text: str) -> dict | None:
@@ -144,18 +279,33 @@ def _extract_first_json(text: str) -> dict | None:
     text = (text or "").strip()
     if not text:
         return None
+    
     # direct parse first
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-    # find first {...} block
+    
+    # Try fixing LaTeX escapes if direct parse fails
+    fixed_text = _fix_latex_escapes(text)
+    try:
+        return json.loads(fixed_text)
+    except json.JSONDecodeError:
+        pass
+    
+    # find first {...} block in original text
     m = re.search(r"\{[\s\S]*\}", text)
     if not m:
         return None
     blob = m.group(0)
     try:
         return json.loads(blob)
+    except json.JSONDecodeError:
+        pass
+    
+    # Try fixing the blob
+    try:
+        return json.loads(_fix_latex_escapes(blob))
     except json.JSONDecodeError:
         return None
 
@@ -220,6 +370,7 @@ def _call_groq(system: str, user: str) -> dict:
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {GROQ_API_KEY}",
+            "User-Agent": "GenAI-Teachers/1.0",
         },
     )
 
@@ -242,7 +393,7 @@ def _call_groq(system: str, user: str) -> dict:
     if not isinstance(parsed, dict):
         raise RuntimeError("Model response was not valid JSON.")
 
-    # Ensure keys exist for the frontend.
+    # Single problem response
     return {
         "problem": _safe_str(parsed.get("problem") or ""),
         "hints": _safe_str(parsed.get("hints") or ""),
@@ -272,6 +423,7 @@ class Handler(BaseHTTPRequestHandler):
         form = _read_json_body(self)
         try:
             system, user = _build_prompt(form)
+            
             if not GROQ_API_KEY:
                 result = _local_mock(form)
                 result["hints"] = (

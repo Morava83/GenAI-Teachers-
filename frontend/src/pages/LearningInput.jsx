@@ -12,13 +12,11 @@ const LearningInput = () => {
     topic: '',
     areaSubject: '',
     grade: '',
-    standards: '',
     dok: '',
     difficulty: '',
     language: 'English',
     interestValue: '',
     format: '',
-    numberOfProblems: 1,
     additionalRequirements: ''
   });
 
@@ -38,8 +36,12 @@ const LearningInput = () => {
   ];
 
   const dokOptions = [
-    { value: 'LOT', label: 'LOT (Lower Order Thinking)' },
-    { value: 'HOT', label: 'HOT (Higher Order Thinking)' }
+    { value: '1', label: 'DOK 1 - Recall & Reproduction' },
+    { value: '2', label: 'DOK 2 - Skills & Concepts' },
+    { value: '3', label: 'DOK 3 - Strategic Thinking' },
+    { value: '4', label: 'DOK 4 - Extended Thinking' },
+    { value: 'LOT', label: 'LOT (Lower Order Thinking - DOK 1-2)' },
+    { value: 'HOT', label: 'HOT (Higher Order Thinking - DOK 3-4)' }
   ];
 
   const languageOptions = [
@@ -111,7 +113,22 @@ const LearningInput = () => {
         selectedTags: tags
       });
 
-      localStorage.setItem('generatedProblem', JSON.stringify(response));
+      // Add metadata to the response for history
+      const problemWithMeta = {
+        ...response,
+        topic: formData.topic || formData.areaSubject || 'Math Problem',
+        createdAt: new Date().toISOString()
+      };
+
+      // Save current problem
+      localStorage.setItem('generatedProblem', JSON.stringify(problemWithMeta));
+      
+      // Save to history
+      const history = JSON.parse(localStorage.getItem('problemHistory') || '[]');
+      history.unshift(problemWithMeta); // Add to beginning
+      // Keep only last 50 problems
+      localStorage.setItem('problemHistory', JSON.stringify(history.slice(0, 50)));
+
       navigate('/results');
     } catch (error) {
       console.error('Error generating problem:', error);
@@ -180,19 +197,6 @@ const LearningInput = () => {
                     <option key={grade} value={grade}>{grade}th Grade</option>
                   ))}
                 </select>
-              </div>
-
-              {/* Standards */}
-              <div className="form-group">
-                <label htmlFor="standards">Standards:</label>
-                <input
-                  type="text"
-                  id="standards"
-                  name="standards"
-                  value={formData.standards}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Common Core, State Standards"
-                />
               </div>
 
               {/* DOK (Depth of Knowledge) */}
@@ -270,20 +274,6 @@ const LearningInput = () => {
                     <option key={format} value={format}>{format}</option>
                   ))}
                 </select>
-              </div>
-
-              {/* Number of Problems */}
-              <div className="form-group">
-                <label htmlFor="numberOfProblems">Number of Problems:</label>
-                <input
-                  type="number"
-                  id="numberOfProblems"
-                  name="numberOfProblems"
-                  value={formData.numberOfProblems}
-                  onChange={handleInputChange}
-                  min="1"
-                  max="10"
-                />
               </div>
 
               {/* Additional Requirements */}
