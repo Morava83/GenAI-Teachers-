@@ -43,6 +43,45 @@
   flex-shrink: 0;
 }
 
+/* Navigation buttons */
+
+
+.nav-buttons {
+  position: absolute;
+  top: 25px;
+  left: 25px;
+  z-index: 100;
+  display: flex;
+  gap: 10px;
+}
+
+/* Navigation buttons - Personalization page specific */
+.personalization-page .nav-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 12px 18px !important;
+  background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%) !important; /* Same pink gradient as CTA buttons */
+  border: 2px solid #e94560 !important;
+  border-radius: 12px !important;
+  color: white !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4) !important;
+}
+
+.personalization-page .nav-btn:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 30px rgba(233, 69, 96, 0.5) !important;
+}
+
+.personalization-page .nav-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4) !important;
+}
+
 /* Floating math symbols background */
 .math-background {
   position: absolute;
@@ -445,4 +484,10 @@
   .logo-sigma {
     font-size: 2.5rem;
   }
+  .personalization-page .nav-btn {
+  background: #ff4081;
+  border: 2px solid #f06292;
+  color: white;
+}
+
 }

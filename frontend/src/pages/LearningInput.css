@@ -4,6 +4,46 @@
   justify-content: center;
   align-items: flex-start;
   padding: 40px 20px;
+  position: relative;
+}
+
+/* Navigation buttons */
+.nav-buttons {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 18px;
+  background: #007bff !important; /* Same blue as generate-btn */
+  border: 2px solid #0056b3 !important; /* Same as generate-btn hover */
+  border-radius: 12px;
+  color: white !important;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3) !important;
+}
+
+.nav-btn:hover {
+  background: #0056b3 !important; /* Same as generate-btn hover */
+  border-color: #004085 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4) !important;
+}
+
+.nav-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3) !important;
 }
 
 .left-panel {

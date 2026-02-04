@@ -64,10 +64,17 @@ const Results = () => {
 
   return (
     <div className="results-container">
-      <div className="results-header">
-        <button className="back-btn" onClick={handleBack}>
-          ← Back to Learning
+      {/* Navigation buttons */}
+      <div className="nav-buttons">
+        <button className="nav-btn home-btn" onClick={() => navigate('/')}>
+          🏠︎ Home
         </button>
+        <button className="nav-btn back-btn" onClick={() => navigate('/learning')}>
+          ← Back
+        </button>
+      </div>
+
+      <div className="results-header">
         <h1>Your Learning Task</h1>
       </div>
 

@@ -140,6 +140,16 @@ const LearningInput = () => {
 
   return (
     <div className="learning-input-container">
+      {/* Navigation buttons */}
+      <div className="nav-buttons">
+        <button className="nav-btn home-btn" onClick={() => navigate('/')}>
+          🏠︎ Home
+        </button>
+        <button className="nav-btn back-btn" onClick={() => navigate('/?questions=true')}>
+          ← Back
+        </button>
+      </div>
+
       <div className="left-panel">
         <h1>What you want to learn?</h1>
         

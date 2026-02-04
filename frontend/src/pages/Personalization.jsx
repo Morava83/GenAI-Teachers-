@@ -14,6 +14,14 @@ const Personalization = () => {
 
   const totalQuestions = 3;
 
+  // Check URL parameters to determine initial view
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('questions') === 'true') {
+      setShowLanding(false);
+    }
+  }, []);
+
   // Floating math symbols for the background
   const mathSymbols = [
     '∫', '∑', 'π', '√', '∞', 'Δ', '∂', 'θ', 'λ', '÷',
@@ -174,6 +182,24 @@ const Personalization = () => {
   // Personalization questions view
   return (
     <div className="personalization-page">
+      {/* Navigation buttons */}
+      <div className="nav-buttons">
+        <button className="nav-btn home-btn" onClick={() => { 
+          localStorage.removeItem('userPreferences');
+          localStorage.removeItem('generatedProblem');
+          localStorage.removeItem('userSettings');
+          setAnswers({
+            question1: '',
+            question2: '',
+            question3: ''
+          });
+          setCurrentQuestion(1);
+          setShowLanding(true);
+        }}>
+          🏠︎ Home
+        </button>
+      </div>
+
       <div className="math-background light">
         {mathSymbols.slice(0, 10).map((symbol, index) => (
           <span
