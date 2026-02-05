@@ -299,7 +299,6 @@
 
 .personalization-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -308,7 +307,7 @@
 }
 
 .personalization-page .floating-symbol {
-  color: #1a1a2e;
+  color: rgba(255, 255, 255, 0.1);
 }
 
 .personalization-container {
@@ -317,9 +316,11 @@
   max-width: 550px;
   width: 90%;
   padding: 50px 40px;
-  background: white;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .personalization-header {
@@ -330,12 +331,12 @@
 .personalization-header h1 {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1a1a2e;
+  color: white;
   margin: 0 0 8px;
 }
 
 .personalization-header .subtitle {
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 1rem;
   margin: 0;
 }
@@ -343,7 +344,7 @@
 /* Progress bar */
 .progress-bar {
   height: 6px;
-  background: #e0e0e0;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
   overflow: hidden;
   margin-bottom: 8px;
@@ -358,7 +359,7 @@
 
 .progress-text {
   text-align: center;
-  color: #999;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 0.85rem;
   margin-bottom: 30px;
   text-transform: uppercase;
@@ -374,33 +375,38 @@
   display: block;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1a1a2e;
+  color: white;
   margin-bottom: 15px;
 }
 
 .question-card textarea {
   width: 100%;
   padding: 16px;
-  border: 2px solid #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.question-card textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .question-card textarea:focus {
   outline: none;
   border-color: #e94560;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.2);
 }
 
 .note {
   margin-top: 10px;
   font-size: 0.85rem;
-  color: #999;
+  color: rgba(255, 255, 255, 0.5);
   font-style: italic;
 }
 
@@ -423,12 +429,14 @@
 }
 
 .skip-btn {
-  background: #f0f0f0;
-  color: #666;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .skip-btn:hover {
-  background: #e0e0e0;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
 }
 
 .next-btn {
