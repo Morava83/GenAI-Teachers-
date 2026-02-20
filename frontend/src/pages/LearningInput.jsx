@@ -23,6 +23,8 @@ const LearningInput = () => {
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
+  const [feedback, setFeedback] = useState('');
+
 
   const areaOptions = [
     'Mathematics',
@@ -339,6 +341,17 @@ const LearningInput = () => {
                 +
               </button>
             )}
+          </div>
+
+          {/* Feedback Section */}
+          <div className="feedback-section">
+            <h3>📝 Feedback</h3>
+            <textarea
+            className="feedback-input"
+            placeholder="Enter feedback here..."
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            />
           </div>
 
           {/* Generate Button */}
