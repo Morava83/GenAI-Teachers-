@@ -553,7 +553,6 @@ const Account = () => {
                       onClick={() => handleAddToSet(set.name)}
                     >
                       {set.name}
-                      <span className="set-problem-count">{set.problems.length}</span>
                     </button>
                   ))}
                 </div>

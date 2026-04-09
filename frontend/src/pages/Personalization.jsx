@@ -74,6 +74,14 @@ const Personalization = () => {
   };
 
   const handleSkip = () => {
+    // Clear the current question's answer when skipping
+    const newAnswers = {
+      ...answers,
+      [`question${currentQuestion}`]: ''
+    };
+    setAnswers(newAnswers);
+    localStorage.setItem('userPreferences', JSON.stringify(newAnswers));
+    
     if (currentQuestion < totalQuestions) {
       setCurrentQuestion(currentQuestion + 1);
     } else {

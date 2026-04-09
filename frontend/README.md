@@ -10,7 +10,7 @@ npm install
 ```
 
 ### 2. Set up environment
-Create a `.env` file:
+Create a `.env` file (if not there already):
 ```
 VITE_SUPABASE_URL=your-supabase-url
 VITE_SUPABASE_ANON_KEY=your-supabase-key
@@ -19,7 +19,7 @@ VITE_SUPABASE_ANON_KEY=your-supabase-key
 ### 3. Start the backend
 In the project root:
 ```bash
-# Add your Groq API key to .env
+# Add your Groq API key to .env if not there already
 echo "GROQ_API_KEY=your-key-here" > ../.env
 
 # Run the backend

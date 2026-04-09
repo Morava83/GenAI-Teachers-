@@ -23,7 +23,6 @@ const LearningInput = () => {
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
-  const [feedback, setFeedback] = useState('');
 
 
   const areaOptions = [
@@ -109,35 +108,31 @@ const LearningInput = () => {
 
     setLoading(true);
 
-    try {
-      const response = await generateProblem({
-        ...formData,
-        selectedTags: tags
-      });
+    const response = await generateProblem({
+      ...formData,
+      selectedTags: tags
+    });
 
-      // Add metadata to the response for history
-      const problemWithMeta = {
-        ...response,
-        topic: formData.topic || formData.areaSubject || 'Math Problem',
-        createdAt: new Date().toISOString()
-      };
+    // Add metadata to the response for history
+    const problemWithMeta = {
+      ...response,
+      topic: formData.topic || formData.areaSubject || 'Math Problem',
+      createdAt: new Date().toISOString(),
+      originalFormData: { ...formData, selectedTags: tags }
+    };
 
-      // Save current problem
-      localStorage.setItem('generatedProblem', JSON.stringify(problemWithMeta));
-      
-      // Save to history
+    // Save current problem
+    localStorage.setItem('generatedProblem', JSON.stringify(problemWithMeta));
+    
+    // Save to history (only if not offline fallback)
+    if (!response.isOffline) {
       const history = JSON.parse(localStorage.getItem('problemHistory') || '[]');
-      history.unshift(problemWithMeta); // Add to beginning
-      // Keep only last 50 problems
+      history.unshift(problemWithMeta);
       localStorage.setItem('problemHistory', JSON.stringify(history.slice(0, 50)));
-
-      navigate('/results');
-    } catch (error) {
-      console.error('Error generating problem:', error);
-      alert('Failed to generate problem. Please make sure the backend server is running.');
-    } finally {
-      setLoading(false);
     }
+
+    navigate('/results');
+    setLoading(false);
   };
 
   return (
@@ -341,17 +336,6 @@ const LearningInput = () => {
                 +
               </button>
             )}
-          </div>
-
-          {/* Feedback Section */}
-          <div className="feedback-section">
-            <h3>📝 Feedback</h3>
-            <textarea
-            className="feedback-input"
-            placeholder="Enter feedback here..."
-            value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
-            />
           </div>
 
           {/* Generate Button */}
