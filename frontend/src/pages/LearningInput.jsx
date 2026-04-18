@@ -12,19 +12,18 @@ const LearningInput = () => {
     topic: '',
     areaSubject: '',
     grade: '',
-    standards: '',
     dok: '',
     difficulty: '',
     language: 'English',
     interestValue: '',
     format: '',
-    numberOfProblems: 1,
     additionalRequirements: ''
   });
 
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
+
 
   const areaOptions = [
     'Mathematics',
@@ -38,8 +37,12 @@ const LearningInput = () => {
   ];
 
   const dokOptions = [
-    { value: 'LOT', label: 'LOT (Lower Order Thinking)' },
-    { value: 'HOT', label: 'HOT (Higher Order Thinking)' }
+    { value: '1', label: 'DOK 1 - Recall & Reproduction' },
+    { value: '2', label: 'DOK 2 - Skills & Concepts' },
+    { value: '3', label: 'DOK 3 - Strategic Thinking' },
+    { value: '4', label: 'DOK 4 - Extended Thinking' },
+    { value: 'LOT', label: 'LOT (Lower Order Thinking - DOK 1-2)' },
+    { value: 'HOT', label: 'HOT (Higher Order Thinking - DOK 3-4)' }
   ];
 
   const languageOptions = [
@@ -99,36 +102,57 @@ const LearningInput = () => {
     e.preventDefault();
     
     if (!formData.topic && !formData.areaSubject) {
-      alert('Please enter what you want to learn or select an area/subject');
+      alert('Please enter a topic or select an area/subject');
       return;
     }
 
     setLoading(true);
 
-    try {
-      const response = await generateProblem({
-        ...formData,
-        selectedTags: tags
-      });
+    const response = await generateProblem({
+      ...formData,
+      selectedTags: tags
+    });
 
-      localStorage.setItem('generatedProblem', JSON.stringify(response));
-      navigate('/results');
-    } catch (error) {
-      console.error('Error generating problem:', error);
-      alert('Failed to generate problem. Please make sure the backend server is running.');
-    } finally {
-      setLoading(false);
+    // Add metadata to the response for history
+    const problemWithMeta = {
+      ...response,
+      topic: formData.topic || formData.areaSubject || 'Math Problem',
+      createdAt: new Date().toISOString(),
+      originalFormData: { ...formData, selectedTags: tags }
+    };
+
+    // Save current problem
+    localStorage.setItem('generatedProblem', JSON.stringify(problemWithMeta));
+    
+    // Save to history (only if not offline fallback)
+    if (!response.isOffline) {
+      const history = JSON.parse(localStorage.getItem('problemHistory') || '[]');
+      history.unshift(problemWithMeta);
+      localStorage.setItem('problemHistory', JSON.stringify(history.slice(0, 50)));
     }
+
+    navigate('/results');
+    setLoading(false);
   };
 
   return (
     <div className="learning-input-container">
+      {/* Navigation buttons */}
+      <div className="nav-buttons">
+        <button className="nav-btn home-btn" onClick={() => navigate('/')}>
+          🏠︎ Home
+        </button>
+        <button className="nav-btn back-btn" onClick={() => navigate('/?questions=true')}>
+          ← Back
+        </button>
+      </div>
+
       <div className="left-panel">
-        <h1>What you want to learn?</h1>
+        <h1>Generate a Problem</h1>
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="topic">I want to learn:</label>
+            <label htmlFor="topic">Topic:</label>
             <input
               type="text"
               id="topic"
@@ -182,19 +206,6 @@ const LearningInput = () => {
                 </select>
               </div>
 
-              {/* Standards */}
-              <div className="form-group">
-                <label htmlFor="standards">Standards:</label>
-                <input
-                  type="text"
-                  id="standards"
-                  name="standards"
-                  value={formData.standards}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Common Core, State Standards"
-                />
-              </div>
-
               {/* DOK (Depth of Knowledge) */}
               <div className="form-group">
                 <label htmlFor="dok">Depth of Knowledge (DOK):</label>
@@ -243,16 +254,16 @@ const LearningInput = () => {
                 </select>
               </div>
 
-              {/* Interest/Value */}
+              {/* Context/Theme */}
               <div className="form-group">
-                <label htmlFor="interestValue">Interest/Value/Proficiency:</label>
+                <label htmlFor="interestValue">Context/Theme:</label>
                 <input
                   type="text"
                   id="interestValue"
                   name="interestValue"
                   value={formData.interestValue}
                   onChange={handleInputChange}
-                  placeholder="e.g., real-world applications, career relevance"
+                  placeholder="e.g., sports, cooking, travel, technology"
                 />
               </div>
 
@@ -272,20 +283,6 @@ const LearningInput = () => {
                 </select>
               </div>
 
-              {/* Number of Problems */}
-              <div className="form-group">
-                <label htmlFor="numberOfProblems">Number of Problems:</label>
-                <input
-                  type="number"
-                  id="numberOfProblems"
-                  name="numberOfProblems"
-                  value={formData.numberOfProblems}
-                  onChange={handleInputChange}
-                  min="1"
-                  max="10"
-                />
-              </div>
-
               {/* Additional Requirements */}
               <div className="form-group">
                 <label htmlFor="additionalRequirements">Additional Requirements:</label>
@@ -301,9 +298,9 @@ const LearningInput = () => {
             </div>
           )}
 
-          {/* Tags/Interests */}
+          {/* Tags/Themes */}
           <div className="form-group">
-            <h3>and I want to involve:</h3>
+            <h3>Topics of Interest:</h3>
             <div className="tag-container">
               {tags.map(tag => (
                 <span key={tag} className="tag">
