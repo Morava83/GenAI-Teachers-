@@ -867,3 +867,144 @@
     font-size: 0.85rem;
   }
 }
+
+/* ============================================
+   BACKEND CONFIG UI
+   ============================================ */
+
+.backend-description {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: -10px 0 20px;
+  line-height: 1.5;
+}
+
+/* Backend info box */
+.backend-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin: 16px 0;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+}
+
+.backend-info-box.info {
+  background: rgba(74, 144, 226, 0.1);
+  border-color: rgba(74, 144, 226, 0.3);
+}
+
+.backend-info-box.warning {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.backend-info-icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #4a90e2;
+}
+
+.backend-info-box.warning .backend-info-icon {
+  color: #ffc107;
+}
+
+/* Input fields for backend config */
+.setting-item input[type="text"],
+.setting-item input[type="password"] {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: white;
+  font-size: 0.9rem;
+  width: 200px;
+  transition: all 0.2s ease;
+}
+
+.setting-item input[type="text"]::placeholder,
+.setting-item input[type="password"]::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.setting-item input[type="text"]:focus,
+.setting-item input[type="password"]:focus {
+  outline: none;
+  border-color: #e94560;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Password visibility toggle */
+.password-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.password-input-wrapper input {
+  width: 160px;
+}
+
+.toggle-visibility-btn {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.toggle-visibility-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Backend save button */
+.backend-save-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+}
+
+.backend-save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+}
+
+.backend-save-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive adjustments for backend config */
+@media (max-width: 600px) {
+  .setting-item input[type="text"],
+  .setting-item input[type="password"] {
+    width: 100%;
+  }
+
+  .password-input-wrapper {
+    width: 100%;
+  }
+
+  .password-input-wrapper input {
+    width: 100%;
+  }
+}

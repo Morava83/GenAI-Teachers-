@@ -4,5 +4,6 @@ from . import views
 urlpatterns = [
     path("api/generate", views.generate_problem, name="generate_problem"),
     path("api/health", views.health_check, name="health_check"),
+    path("api/ollama-status", views.ollama_status, name="ollama_status"),
     re_path(r'^.*$', views.react_app, name="react_app"),
 ]

@@ -26,6 +26,3 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    from django.contrib.staticfiles.views import serve
-    from django.urls import re_path
-    urlpatterns.insert(0, re_path(r'^static/(?P<path>.*)$', serve))
