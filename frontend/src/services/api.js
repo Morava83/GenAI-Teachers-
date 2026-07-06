@@ -1,7 +1,7 @@
 import axios from 'axios';
+import { generateWithBackend, BACKEND_TYPES, loadBackendConfig } from './backendConfig';
 
-// Use environment variable for production, fallback to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"
+export { BACKEND_TYPES, loadBackendConfig };
 
 // Fallback problems organized by subject/area
 const fallbackProblems = {
@@ -127,25 +127,53 @@ const getRandomFallbackProblem = (formData) => {
 
 export const generateProblem = async (formData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/generate`, formData, {
-      headers: {'Content-Type': 'application/json'},
-      timeout: 60000,
-    });
-    return response.data;
+    const result = await generateWithBackend(formData);
+
+    // If backend returned null or placeholder mode, use fallback
+    if (!result) {
+      console.log('Backend unavailable or placeholder mode, using fallback problem');
+      return getRandomFallbackProblem(formData);
+    }
+
+    return result;
   } catch (error) {
     console.error('Error generating problem:', error);
-    console.log('Backend unavailable, using fallback problem');
+    console.log('Using fallback problem');
     return getRandomFallbackProblem(formData);
   }
 };
 
 export const healthCheck = async () => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/health`);
-    return response.data;
-  } catch (error) {
-    console.error('Health check failed:', error);
-    throw error;
-  }
-};
+  const config = loadBackendConfig();
+  const { type } = config;
 
+  if (type === BACKEND_TYPES.PLACEHOLDER) {
+    return { status: 'placeholder', message: 'Using built-in problems' };
+  }
+
+  if (type === BACKEND_TYPES.LOCAL) {
+    try {
+      const { ollamaUrl } = config;
+      const response = await axios.get(`${ollamaUrl}/api/tags`, { timeout: 5000 });
+      return { status: 'healthy', backend: 'local', models: response.data.models || [] };
+    } catch {
+      return { status: 'unavailable', backend: 'local' };
+    }
+  }
+
+  if (type === BACKEND_TYPES.OPENAI || type === BACKEND_TYPES.ZHIPU) {
+    return { status: 'configured', backend: type };
+  }
+
+  if (type === BACKEND_TYPES.CALCUL_QUEBC) {
+    try {
+      const { cqApiUrl } = config;
+      const response = await axios.get(`${cqApiUrl}/api/health`, { timeout: 5000 });
+      return { status: 'healthy', backend: 'calcul_quebec' };
+    } catch {
+      return { status: 'unavailable', backend: 'calcul_quebec' };
+    }
+  }
+
+  return { status: 'unknown' };
+};

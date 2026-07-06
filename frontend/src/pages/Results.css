@@ -487,3 +487,22 @@
   background: rgba(40, 167, 69, 0.15);
   border-radius: 8px;
 }
+
+/* Light theme alignment */
+.results-container { color: #263632; }
+.results-header h1, .problem-section h2, .hints-section h3, .solution-section h3, .feedback-section h3 { color: #173f36; }
+.results-content { background: #fff; border-color: #e5e3dc; box-shadow: 0 15px 50px rgba(45,57,52,.08); }
+.problem-section h2 { border-bottom-color: #1f6b5a; }
+.problem-content { color: #263632; background: #f8f9f7; border-color: #dfe3df; }
+.problem-content.editable:hover { background: #f1f5f2; border-color: #9bb9af; }
+.problem-edit-input, .feedback-input { color: #263632; background: #fff; border-color: #1f6b5a; }
+.problem-edit-input:focus, .feedback-input:focus { border-color: #165b4b; }
+.problem-edit-btn.cancel-btn, .action-button, .feedback-btn.submit-only-btn { background: #f4f5f2; color: #3d4d48; border-color: #d9ddd9; }
+.problem-edit-btn.cancel-btn:hover, .action-button:hover, .feedback-btn.submit-only-btn:hover:not(:disabled) { background: #e9efeb; }
+.action-button.active, .new-problem-btn, .feedback-btn.regenerate-btn { background: #1f6b5a; border-color: #1f6b5a; box-shadow: 0 4px 14px rgba(31,107,90,.2); }
+.hints-section { background: #fff8e6; }.solution-section { background: #edf7f1; }.hints-content, .solution-content { color: #384741; }.answer-section { background: #e8f5ed; }
+.offline-notice { color: #805600; background: #fff5d8; border-color: #e4c66e; }
+.feedback-rating { background: #f7f8f6; }.rating-btn-label { color: #67736f; }.rating-btn { background: #fff; border-color: #d8ddd9; }
+.feedback-section { background: #fff2f1; }.preset-btn { background: #fff; border-color: #d8ddd9; color: #475650; }.preset-btn:hover:not(:disabled) { background: #f4f6f3; border-color: #aab5b0; }.preset-btn.selected { color: #8a2e35; background: #fde3e2; }
+.elaboration-section { border-top-color: #dedfd9; }.elaboration-prompt { color: #34443e; }.optional-tag, .feedback-input::placeholder { color: #7f8884; }.loading { color: #60706b; }
+.results-container .nav-btn { background: #fff; border-color: #d8ddd9; color: #34443e; }.results-container .nav-btn:hover { background: #edf3ef; border-color: #a9c3ba; }

@@ -4,14 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not found. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file');
-}
+// Only create client if credentials are available
+export const supabase = (supabaseUrl && supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
-export const supabase = createClient(
-  supabaseUrl || '',
-  supabaseAnonKey || ''
-);
+if (!supabase) {
+  console.warn('Supabase credentials not found. User features will be disabled. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file');
+}
 
 // ============================================
 // USER / ACCOUNT FUNCTIONS

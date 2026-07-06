@@ -1,356 +1,208 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateProblem } from '../services/api';
 import './LearningInput.css';
 
+const steps = [
+  { number: 1, title: 'Scope & alignment', short: 'The what' },
+  { number: 2, title: 'Difficulty & support', short: 'The how' },
+  { number: 3, title: 'Output & presentation', short: 'The look' },
+  { number: 4, title: 'Review & generate', short: 'The output' },
+];
+
+const initialForm = {
+  grade: '', areaSubject: 'Mathematics', standard: '', topic: '', format: 'Word Problem',
+  difficulty: 'Medium', dok: '2', scaffolding: 'Hints', additionalRequirements: '',
+  questionCount: '5', answerSpace: 'Standard', organization: 'By topic',
+  includeAnswerKey: true, includeHints: true, includeSolutions: true, includeScratchpad: false,
+  language: 'English', interestValue: '',
+};
+
+const SelectField = ({ label, name, value, onChange, children, hint }) => (
+  <label className="field">
+    <span>{label}</span>
+    {hint && <small>{hint}</small>}
+    <select name={name} value={value} onChange={onChange}>{children}</select>
+  </label>
+);
+
 const LearningInput = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [showMoreOptions, setShowMoreOptions] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    topic: '',
-    areaSubject: '',
-    grade: '',
-    dok: '',
-    difficulty: '',
-    language: 'English',
-    interestValue: '',
-    format: '',
-    additionalRequirements: ''
-  });
-
-  const [tags, setTags] = useState([]);
-  const [tagInput, setTagInput] = useState('');
-  const [showTagInput, setShowTagInput] = useState(false);
-
-
-  const areaOptions = [
-    'Mathematics',
-    'Algebra',
-    'Geometry',
-    'Calculus',
-    'Statistics',
-    'Trigonometry',
-    'Pre-Algebra',
-    'Advanced Mathematics'
-  ];
-
-  const dokOptions = [
-    { value: '1', label: 'DOK 1 - Recall & Reproduction' },
-    { value: '2', label: 'DOK 2 - Skills & Concepts' },
-    { value: '3', label: 'DOK 3 - Strategic Thinking' },
-    { value: '4', label: 'DOK 4 - Extended Thinking' },
-    { value: 'LOT', label: 'LOT (Lower Order Thinking - DOK 1-2)' },
-    { value: 'HOT', label: 'HOT (Higher Order Thinking - DOK 3-4)' }
-  ];
-
-  const languageOptions = [
-    'English',
-    'Spanish',
-    'French',
-    'German',
-    'Arabic',
-    'Chinese'
-  ];
-
-  const formatOptions = [
-    'Multiple Choice',
-    'Short Answer',
-    'Word Problem',
-    'Step-by-Step Solution',
-    'Mixed Format'
-  ];
+  const [formData, setFormData] = useState(initialForm);
+  const [fontSize, setFontSize] = useState(() => localStorage.getItem('generatorFontSize') || 'comfortable');
 
   useEffect(() => {
-    const prefs = localStorage.getItem('userPreferences');
-    if (prefs) {
-      const parsed = JSON.parse(prefs);
-      const allTags = new Set();
-      
-      Object.values(parsed).forEach(value => {
-        if (value) {
-          value.split(',').forEach(tag => {
-            const trimmed = tag.trim();
-            if (trimmed) allTags.add(trimmed);
-          });
-        }
-      });
-      
-      setTags(Array.from(allTags));
+    const saved = localStorage.getItem('problemGeneratorDraft');
+    if (saved) {
+      try { setFormData({ ...initialForm, ...JSON.parse(saved) }); } catch { /* use defaults */ }
     }
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const update = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormData((current) => {
+      const next = { ...current, [name]: type === 'checkbox' ? checked : value };
+      localStorage.setItem('problemGeneratorDraft', JSON.stringify(next));
+      return next;
+    });
   };
 
-  const addTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
-      setShowTagInput(false);
-    }
+  const next = () => {
+    if (step === 1 && (!formData.grade || !formData.topic.trim())) return;
+    setStep((current) => Math.min(4, current + 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const removeTag = (tagToRemove) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+  const previous = () => {
+    setStep((current) => Math.max(1, current - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.topic && !formData.areaSubject) {
-      alert('Please enter a topic or select an area/subject');
-      return;
-    }
+  const changeFontSize = (size) => {
+    setFontSize(size);
+    localStorage.setItem('generatorFontSize', size);
+  };
 
+  const handleSubmit = async () => {
     setLoading(true);
-
     const response = await generateProblem({
       ...formData,
-      selectedTags: tags
+      selectedTags: formData.interestValue ? [formData.interestValue] : [],
     });
-
-    // Add metadata to the response for history
     const problemWithMeta = {
       ...response,
-      topic: formData.topic || formData.areaSubject || 'Math Problem',
+      topic: formData.topic,
       createdAt: new Date().toISOString(),
-      originalFormData: { ...formData, selectedTags: tags }
+      originalFormData: formData,
     };
-
-    // Save current problem
     localStorage.setItem('generatedProblem', JSON.stringify(problemWithMeta));
-    
-    // Save to history (only if not offline fallback)
+    localStorage.setItem('userSettings', JSON.stringify({
+      includeHints: formData.includeHints,
+      includeSolutions: formData.includeSolutions,
+    }));
     if (!response.isOffline) {
       const history = JSON.parse(localStorage.getItem('problemHistory') || '[]');
-      history.unshift(problemWithMeta);
-      localStorage.setItem('problemHistory', JSON.stringify(history.slice(0, 50)));
+      localStorage.setItem('problemHistory', JSON.stringify([problemWithMeta, ...history].slice(0, 50)));
     }
-
     navigate('/results');
-    setLoading(false);
   };
 
   return (
-    <div className="learning-input-container">
-      {/* Navigation buttons */}
-      <div className="nav-buttons">
-        <button className="nav-btn home-btn" onClick={() => navigate('/')}>
-          🏠︎ Home
-        </button>
-        <button className="nav-btn back-btn" onClick={() => navigate('/?questions=true')}>
-          ← Back
-        </button>
-      </div>
-
-      <div className="left-panel">
-        <h1>Generate a Problem</h1>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="topic">Topic:</label>
-            <input
-              type="text"
-              id="topic"
-              name="topic"
-              value={formData.topic}
-              onChange={handleInputChange}
-              placeholder="e.g., quadratic equations, addition, fractions"
-            />
+    <main className={`generator-page font-${fontSize}`}>
+      <header className="generator-topbar">
+        <a className="brand" href="/" aria-label="MathCraft home">
+          <span className="brand-mark">M</span>
+          <span>MathCraft</span>
+        </a>
+        <div className="topbar-actions">
+          <div className="font-controls" aria-label="Text size">
+            <span>Text size</span>
+            <button className={fontSize === 'default' ? 'selected' : ''} onClick={() => changeFontSize('default')} aria-label="Use smaller text">A−</button>
+            <button className={fontSize === 'comfortable' ? 'selected' : ''} onClick={() => changeFontSize('comfortable')} aria-label="Use medium text">A</button>
+            <button className={fontSize === 'large' ? 'selected' : ''} onClick={() => changeFontSize('large')} aria-label="Use larger text">A+</button>
           </div>
-
-          {/* Area/Subject Dropdown */}
-          <div className="form-group">
-            <label htmlFor="areaSubject">Area/Subject:</label>
-            <select
-              id="areaSubject"
-              name="areaSubject"
-              value={formData.areaSubject}
-              onChange={handleInputChange}
-            >
-              <option value="">Select Area/Subject</option>
-              {areaOptions.map(area => (
-                <option key={area} value={area}>{area}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* More Options Toggle */}
-          <div 
-            className="more-options-link" 
-            onClick={() => setShowMoreOptions(!showMoreOptions)}
-          >
-            {showMoreOptions ? 'Less Options' : 'More Options'}
-          </div>
-
-          {/* Expandable More Options */}
-          {showMoreOptions && (
-            <div className="more-options">
-              {/* Grade */}
-              <div className="form-group">
-                <label htmlFor="grade">Grade:</label>
-                <select
-                  id="grade"
-                  name="grade"
-                  value={formData.grade}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Grade</option>
-                  {[6, 7, 8, 9, 10, 11, 12].map(grade => (
-                    <option key={grade} value={grade}>{grade}th Grade</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* DOK (Depth of Knowledge) */}
-              <div className="form-group">
-                <label htmlFor="dok">Depth of Knowledge (DOK):</label>
-                <select
-                  id="dok"
-                  name="dok"
-                  value={formData.dok}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select DOK Level</option>
-                  {dokOptions.map(dok => (
-                    <option key={dok.value} value={dok.value}>{dok.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Difficulty */}
-              <div className="form-group">
-                <label htmlFor="difficulty">Difficulty:</label>
-                <select
-                  id="difficulty"
-                  name="difficulty"
-                  value={formData.difficulty}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Difficulty</option>
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                  <option value="challenging">Challenging</option>
-                </select>
-              </div>
-
-              {/* Language */}
-              <div className="form-group">
-                <label htmlFor="language">Language:</label>
-                <select
-                  id="language"
-                  name="language"
-                  value={formData.language}
-                  onChange={handleInputChange}
-                >
-                  {languageOptions.map(lang => (
-                    <option key={lang} value={lang}>{lang}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Context/Theme */}
-              <div className="form-group">
-                <label htmlFor="interestValue">Context/Theme:</label>
-                <input
-                  type="text"
-                  id="interestValue"
-                  name="interestValue"
-                  value={formData.interestValue}
-                  onChange={handleInputChange}
-                  placeholder="e.g., sports, cooking, travel, technology"
-                />
-              </div>
-
-              {/* Format */}
-              <div className="form-group">
-                <label htmlFor="format">Format:</label>
-                <select
-                  id="format"
-                  name="format"
-                  value={formData.format}
-                  onChange={handleInputChange}
-                >
-                  <option value="">Select Format</option>
-                  {formatOptions.map(format => (
-                    <option key={format} value={format}>{format}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Additional Requirements */}
-              <div className="form-group">
-                <label htmlFor="additionalRequirements">Additional Requirements:</label>
-                <input
-                  type="text"
-                  id="additionalRequirements"
-                  name="additionalRequirements"
-                  value={formData.additionalRequirements}
-                  onChange={handleInputChange}
-                  placeholder="e.g., include diagrams, show all work"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Tags/Themes */}
-          <div className="form-group">
-            <h3>Topics of Interest:</h3>
-            <div className="tag-container">
-              {tags.map(tag => (
-                <span key={tag} className="tag">
-                  {tag}
-                  <button 
-                    type="button" 
-                    onClick={() => removeTag(tag)}
-                    className="tag-remove"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-            
-            {showTagInput ? (
-              <div className="tag-input-container">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                  placeholder="Type and press Enter"
-                />
-                <button type="button" onClick={addTag}>Add</button>
-              </div>
-            ) : (
-              <button 
-                type="button" 
-                className="add-tag-btn"
-                onClick={() => setShowTagInput(true)}
-              >
-                +
-              </button>
-            )}
-          </div>
-
-          {/* Generate Button */}
-          <button 
-            type="submit" 
-            className={`generate-btn ${loading ? 'generating' : ''}`}
-            disabled={loading}
-          >
-            {loading ? 'Generating...' : 'Generate'}
+          <span className="draft-status"><i /> Draft saved</span>
+          <button className="profile-button" onClick={() => navigate('/account')} aria-label="Open profile">
+            <span className="profile-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0" /></svg>
+            </span>
+            <span className="profile-copy"><strong>Profile</strong><small>Account settings</small></span>
+            <span className="profile-arrow">›</span>
           </button>
-        </form>
+        </div>
+      </header>
+
+      <div className="generator-shell">
+        <section className="generator-intro">
+          <h1>Create Math Problem</h1>
+        </section>
+
+        <nav className="stepper" aria-label="Problem generation progress">
+          {steps.map((item) => (
+            <button key={item.number} className={`${step === item.number ? 'active' : ''} ${step > item.number ? 'complete' : ''}`}
+              onClick={() => item.number < step && setStep(item.number)} disabled={item.number > step}>
+              <span className="step-number">{step > item.number ? '✓' : item.number}</span>
+              <span className="step-copy"><strong>{item.title}</strong><small>{item.short}</small></span>
+            </button>
+          ))}
+        </nav>
+
+        <section className="generator-card">
+          <div className="card-heading">
+            <span>STEP {step} OF 4</span>
+            <h2>{steps[step - 1].title}</h2>
+            <p>{[
+              'Start with the learning goal and the kind of problem you need.',
+              'Choose the cognitive challenge and the right level of support.',
+              'Decide what students and teachers will see in the final activity.',
+              'Check your choices, then create your classroom-ready problem set.',
+            ][step - 1]}</p>
+          </div>
+
+          {step === 1 && <div className="form-grid">
+            <SelectField label="Grade level *" name="grade" value={formData.grade} onChange={update}>
+              <option value="">Select a grade</option>{[1,2,3,4,5,6,7,8,9,10,11,12].map((g) => <option key={g}>Grade {g}</option>)}
+            </SelectField>
+            <SelectField label="Subject" name="areaSubject" value={formData.areaSubject} onChange={update}>
+              {['Mathematics','Pre-Algebra','Algebra','Geometry','Trigonometry','Calculus','Statistics'].map((v) => <option key={v}>{v}</option>)}
+            </SelectField>
+            <label className="field full"><span>Learning standard <em>Optional</em></span><input name="standard" value={formData.standard} onChange={update} placeholder="e.g., CCSS.MATH.CONTENT.7.RP.A.2" /></label>
+            <label className="field full"><span>Topic or concept *</span><textarea name="topic" value={formData.topic} onChange={update} placeholder="e.g., Compare proportional relationships using tables and graphs" rows="2" /><small className="validation-hint">Be specific about what students should practice.</small></label>
+            <SelectField label="Problem format" name="format" value={formData.format} onChange={update}>
+              {['Word Problem','Multiple Choice','Short Answer','Open Response','Mixed Format'].map((v) => <option key={v}>{v}</option>)}
+            </SelectField>
+            <label className="field"><span>Real-world context <em>Optional</em></span><input name="interestValue" value={formData.interestValue} onChange={update} placeholder="e.g., sports, music, local community" /></label>
+          </div>}
+
+          {step === 2 && <div className="form-grid">
+            <SelectField label="Difficulty" name="difficulty" value={formData.difficulty} onChange={update}>
+              {['Easy','Medium','Hard','Advanced'].map((v) => <option key={v}>{v}</option>)}
+            </SelectField>
+            <SelectField label="Depth of knowledge" name="dok" value={formData.dok} onChange={update}>
+              <option value="1">DOK 1 — Recall</option><option value="2">DOK 2 — Skills & concepts</option><option value="3">DOK 3 — Strategic thinking</option><option value="4">DOK 4 — Extended thinking</option>
+            </SelectField>
+            <SelectField label="Scaffolding strategy" name="scaffolding" value={formData.scaffolding} onChange={update}>
+              {['None','Hints','Worked Example','Step-by-Step Prompts','Skeletal Frame'].map((v) => <option key={v}>{v}</option>)}
+            </SelectField>
+            <label className="field full"><span>Custom rules <em>Optional</em></span><textarea name="additionalRequirements" value={formData.additionalRequirements} onChange={update} placeholder="e.g., Use whole numbers only; avoid negative answers" rows="3" /></label>
+          </div>}
+
+          {step === 3 && <div className="form-grid">
+            <SelectField label="Number of questions" name="questionCount" value={formData.questionCount} onChange={update}>
+              {['1','3','5','10','15','20'].map((v) => <option key={v}>{v}</option>)}
+            </SelectField>
+            <SelectField label="Answer space" name="answerSpace" value={formData.answerSpace} onChange={update}>
+              {['Compact','Standard','Generous'].map((v) => <option key={v}>{v}</option>)}
+            </SelectField>
+            <SelectField label="Organization" name="organization" value={formData.organization} onChange={update}>
+              {['By topic','By difficulty','Mixed'].map((v) => <option key={v}>{v}</option>)}
+            </SelectField>
+            <div className="field full"><span>Include in output</span><div className="toggle-grid">
+              {[["includeAnswerKey","Answer key"],["includeHints","Student hints"],["includeSolutions","Worked solutions"],["includeScratchpad","Scratch space"]].map(([name,label]) => <label className="check-card" key={name}><input type="checkbox" name={name} checked={formData[name]} onChange={update} /><span className="check-box">✓</span><span>{label}</span></label>)}
+            </div></div>
+          </div>}
+
+          {step === 4 && <div className="review">
+            <div className="review-callout"><span>✓</span><div><strong>Ready to generate</strong><p>Your settings are saved. Review the details below before creating the problem set.</p></div></div>
+            <div className="review-grid">
+              <div><small>LEARNING GOAL</small><strong>{formData.topic || 'Not specified'}</strong><p>{formData.grade} · {formData.areaSubject}{formData.standard ? ` · ${formData.standard}` : ''}</p></div>
+              <div><small>CHALLENGE</small><strong>{formData.difficulty} · DOK {formData.dok}</strong><p>{formData.scaffolding} support</p></div>
+              <div><small>DELIVERABLE</small><strong>{formData.questionCount} {formData.format.toLowerCase()} questions</strong><p>{formData.organization} · {formData.answerSpace} answer space</p></div>
+              <div><small>INCLUDED</small><strong>{[['includeAnswerKey','Answer key'],['includeHints','Hints'],['includeSolutions','Solutions'],['includeScratchpad','Scratch space']].filter(([key]) => formData[key]).map(([,label]) => label).join(', ') || 'Problems only'}</strong><p>English</p></div>
+            </div>
+          </div>}
+
+          <div className="card-actions">
+            {step > 1 ? <button className="secondary-button" onClick={previous}>← Previous</button> : <span />}
+            {step < 4 ? <button className="primary-button" onClick={next} disabled={step === 1 && (!formData.grade || !formData.topic.trim())}>Continue <span>→</span></button> : <button className="primary-button generate" onClick={handleSubmit} disabled={loading}>{loading ? 'Generating…' : 'Generate problems'} <span>✦</span></button>}
+          </div>
+        </section>
+        <p className="privacy-note">Your draft is stored only in this browser.</p>
       </div>
-    </div>
+    </main>
   );
 };
 
 export default LearningInput;
-
