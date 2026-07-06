@@ -3,8 +3,8 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: rgba(255, 255, 255, 0.9);
+  color-scheme: light;
+  color: #1d2825;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,8 +21,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  background-attachment: fixed;
+  background: #f8f7f3;
 }
 
 #root {
