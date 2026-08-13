@@ -1,0 +1,47 @@
+[Unit]
+Description=GenAI Teachers Inference Server (Arbutus)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/genai
+
+# Drop-in environment file - lets you change MODEL_PATH, ARBUTUS_API_KEY,
+# ARBUTUS_CORS_ORIGINS, etc. without editing the unit file. The file should
+# be 600-permissioned root:root since it may contain the API key.
+EnvironmentFile=-/etc/genai/inference.env
+
+# Defaults if EnvironmentFile is missing
+Environment=MODEL_PATH=/opt/genai/model
+Environment=PORT=8000
+Environment=HOST=0.0.0.0
+
+ExecStart=/opt/genai/venv/bin/python /opt/genai/inference_server.py \
+    --model-path ${MODEL_PATH} \
+    --host ${HOST} \
+    --port ${PORT} \
+    --workers 1
+
+# Resilience
+Restart=always
+RestartSec=10
+TimeoutStartSec=600
+TimeoutStopSec=30
+
+# Logging to journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=genai-inference
+
+# Light hardening - relax these if they conflict with model paths
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/genai /var/log/genai
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
